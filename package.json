@@ -14,6 +14,17 @@
 		"vscode": "^1.60.0"
 	},
 	"contributes": {
+		"configuration": {
+			"type": "object",
+			"title": "Dired Extension Configuration",
+			"properties": {
+				"dired.renameMode": {
+					"type": "boolean",
+					"default": false,
+					"description": "Enable/Disable rename mode in dired."
+				}
+			}
+		},
 		"commands": [
 			{
 				"command": "extension.diredBuffer",
@@ -48,7 +59,7 @@
 			{
 				"key": "n",
 				"command": "extension.diredNextLine",
-				"when": "editorTextFocus && editorLangId == 'dired' && !config.diredRenameMode"
+				"when": "editorTextFocus && editorLangId == 'dired' && !config.dired.renameMode"
 			},
 			{
 				"key": "p",
@@ -57,12 +68,12 @@
 					"forward": false
 				},
 				
-				"when": "editorTextFocus && editorLangId == 'dired' && !config.diredRenameMode"
+				"when": "editorTextFocus && editorLangId == 'dired' && !config.dired.renameMode"
 			},
 			{
 				"key": "enter",
 				"command": "extension.diredSelect",
-				"when": "editorTextFocus && editorLangId == 'dired' && !config.diredRenameMode"
+				"when": "editorTextFocus && editorLangId == 'dired' && !config.dired.renameMode"
 			},
 			{
 				"key": "cmd+enter",
@@ -70,7 +81,7 @@
 				"args": {
 					"newView": true
 				},
-				"when": "editorTextFocus && editorLangId == 'dired' && !config.diredRenameMode"
+				"when": "editorTextFocus && editorLangId == 'dired' && !config.dired.renameMode"
 			},
 			{
 				"key": "ctrl+enter",
@@ -78,12 +89,12 @@
 				"args": {
 					"newView": true
 				},
-				"when": "editorTextFocus && editorLangId == 'dired' && !config.diredRenameMode"
+				"when": "editorTextFocus && editorLangId == 'dired' && !config.dired.renameMode"
 			},
 			{
 				"key": "o",
 				"command": "extension.diredSelect",
-				"when": "editorTextFocus && editorLangId == 'dired' && !config.diredRenameMode"
+				"when": "editorTextFocus && editorLangId == 'dired' && !config.dired.renameMode"
 			},
 			{
 				"key": "c d",
@@ -91,7 +102,7 @@
 				"args": {
 					"which": "directory"
 				},
-				"when": "editorTextFocus && editorLangId == 'dired' && !config.diredRenameMode"
+				"when": "editorTextFocus && editorLangId == 'dired' && !config.dired.renameMode"
 			},
 			{
 				"key": "c f",
@@ -99,12 +110,12 @@
 				"args": {
 					"which": "file"
 				},
-				"when": "editorTextFocus && editorLangId == 'dired' && !config.diredRenameMode"
+				"when": "editorTextFocus && editorLangId == 'dired' && !config.dired.renameMode"
 			},
 			{
 				"key": "r",
 				"command": "extension.diredRefresh",
-				"when": "editorTextFocus && editorLangId == 'dired' && !config.diredRenameMode"
+				"when": "editorTextFocus && editorLangId == 'dired' && !config.dired.renameMode"
 			},
 			{
 				"key": "m",
@@ -112,7 +123,7 @@
 				"args": {
 					"mark": "toggle"
 				},
-				"when": "editorTextFocus && editorLangId == 'dired' && !config.diredRenameMode"
+				"when": "editorTextFocus && editorLangId == 'dired' && !config.dired.renameMode"
 			},
 			{
 				"key": "U",
@@ -121,7 +132,7 @@
 					"mark": false,
 					"markall": true
 				},
-				"when": "editorTextFocus && editorLangId == 'dired' && !config.diredRenameMode"
+				"when": "editorTextFocus && editorLangId == 'dired' && !config.dired.renameMode"
 			},
 			{
 				"key": "t",
@@ -130,47 +141,47 @@
 					"mark": "toggle",
 					"markall": true
 				},
-				"when": "editorTextFocus && editorLangId == 'dired' && !config.diredRenameMode"
+				"when": "editorTextFocus && editorLangId == 'dired' && !config.dired.renameMode"
 			},
 			{
 				"key": "u",
 				"command": "extension.diredUp",
-				"when": "editorTextFocus && editorLangId == 'dired' && !config.diredRenameMode"
+				"when": "editorTextFocus && editorLangId == 'dired' && !config.dired.renameMode"
 			},
 			{
 				"key": "shift+d",
 				"command": "extension.diredDelete",
-				"when": "editorTextFocus && editorLangId == 'dired' && !config.diredRenameMode"
+				"when": "editorTextFocus && editorLangId == 'dired' && !config.dired.renameMode"
 			},
 			{
 				"key": "shift+m",
 				"command": "extension.diredMove",
-				"when": "editorTextFocus && editorLangId == 'dired' && !config.diredRenameMode"
+				"when": "editorTextFocus && editorLangId == 'dired' && !config.dired.renameMode"
 			},
 			{
 				"key": "shift+8 .",
 				"command": "extension.diredMarkExtension",
-				"when": "editorTextFocus && editorLangId == 'dired' && !config.diredRenameMode"
+				"when": "editorTextFocus && editorLangId == 'dired' && !config.dired.renameMode"
 			},
 			{
 				"key": "shift+r",
 				"command": "extension.diredRename",
-				"when": "editorTextFocus && editorLangId == 'dired' && !config.diredRenameMode"
+				"when": "editorTextFocus && editorLangId == 'dired' && !config.dired.renameMode"
 			},
 			{
 				"key": "ctrl+enter",
 				"command": "extension.diredRenameCommit",
-				"when": "editorTextFocus && editorLangId == 'dired' && config.diredRenameMode"
+				"when": "editorTextFocus && editorLangId == 'dired' && config.dired.renameMode"
 			},
 			{
-				"key": "ctrl+escape",
+				"key": "shift+escape",
 				"command": "extension.diredRenameCancel",
-				"when": "editorTextFocus && editorLangId == 'dired' && config.diredRenameMode"
+				"when": "editorTextFocus && editorLangId == 'dired' && config.dired.renameMode"
 			},
 			{
 				"key": "g",
 				"command": "extension.diredGoto",
-				"when": "editorTextFocus && editorLangId == 'dired' && !config.diredRenameMode"
+				"when": "editorTextFocus && editorLangId == 'dired' && !config.dired.renameMode"
 			},
 			{
 				"key": "a p",
@@ -178,17 +189,17 @@
 				"args": {
 					"target": "project"
 				},
-				"when": "editorTextFocus && editorLangId == 'dired' && !config.diredRenameMode"
+				"when": "editorTextFocus && editorLangId == 'dired' && !config.dired.renameMode"
 			},
 			{
 				"key": "r p",
 				"command": "extension.diredRemoveFromProject",
-				"when": "editorTextFocus && editorLangId == 'dired' && !config.diredRenameMode"
+				"when": "editorTextFocus && editorLangId == 'dired' && !config.dired.renameMode"
 			},
 			{
 				"key": "shift+b",
 				"command": "extension.diredGotoAnywhere",
-				"when": "editorTextFocus && editorLangId == 'dired' && !config.diredRenameMode"
+				"when": "editorTextFocus && editorLangId == 'dired' && !config.dired.renameMode"
 			},
 			{
 				"key": "a b",
@@ -196,22 +207,22 @@
 				"args": {
 					"target": "bookmark"
 				},
-				"when": "editorTextFocus && editorLangId == 'dired' && !config.diredRenameMode"
+				"when": "editorTextFocus && editorLangId == 'dired' && !config.dired.renameMode"
 			},
 			{
 				"key": "r b",
 				"command": "extension.diredRemoveBookmark",
-				"when": "editorTextFocus && editorLangId == 'dired' && !config.diredRenameMode"
+				"when": "editorTextFocus && editorLangId == 'dired' && !config.dired.renameMode"
 			},
 			{
 				"key": "P",
 				"command": "extension.diredPreview",
-				"when": "editorTextFocus && editorLangId == 'dired' && !config.diredRenameMode"
+				"when": "editorTextFocus && editorLangId == 'dired' && !config.dired.renameMode"
 			},
 			{
 				"key": "j",
 				"command": "extension.diredJumpToName",
-				"when": "editorTextFocus && editorLangId == 'dired' && !config.diredRenameMode"
+				"when": "editorTextFocus && editorLangId == 'dired' && !config.dired.renameMode"
 			},
 			{
 				"key": "tab",
