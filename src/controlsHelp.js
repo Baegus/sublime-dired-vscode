@@ -1,3 +1,6 @@
+const os = require('os');
+const isMacOS = os.platform() === "darwin";
+
 const controlsHelp = {
 	default: [
 		// [
@@ -44,7 +47,11 @@ exports.controlsHelp = controlsHelp;
 
 const getControlsHelpString = (groups) => {
 	const string = groups.map((group) => {
-		return group.map((item) => ` ${item.join(" = ")}`).join("\n");
+		return group.map((item) => {
+			let itemString = item.join(" = ")
+			if (isMacOS) itemString = itemString.replaceAll("Ctrl","Cmd");
+			return ` ${itemString}`;
+		}).join("\n");
 	}).join("\n\n");
 	return string;
 };
