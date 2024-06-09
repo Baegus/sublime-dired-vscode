@@ -268,6 +268,13 @@ const diredBuffer = async (provider) => {
 }
 
 /**
+ * Refreshes the current directory listing (when files changed outside of the editor)
+ */
+const diredRefresh = async (provider) => {
+	await showCurrentDirectory(provider);
+}
+
+/**
  * Marks the current file/directory as selected to allow multiple file operations.
  * NOT YET IMPLEMENTED.
  */
@@ -355,6 +362,7 @@ function activate(context) {
 
 	const commands = [
 		["diredBuffer", () => diredBuffer(provider)],
+		["diredRefresh", () => diredRefresh(provider)],
 		["diredMark", diredMark],
 		["diredSelect", () => diredSelect(provider)],
 		["diredUp", () => diredUp(provider)],

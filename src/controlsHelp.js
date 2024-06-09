@@ -19,7 +19,7 @@ const controlsHelp = {
 			// ["g", "goto directory (NOT YET IMPLEMENTED)"],
 			// ["p", "move to previous file (NOT YET IMPLEMENTED)"],
 			// ["n", "move to next file (NOT YET IMPLEMENTED)"],
-			// ["r", "refresh view (NOT YET IMPLEMENTED)"],
+			["rv", "refresh view"],
 		],
 		// [
 			// ["B", "Goto Anywhere (goto any directory, bookmark or project dir) (NOT YET IMPLEMENTED)"],
