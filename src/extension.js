@@ -384,6 +384,10 @@ const createFile = (filePath) => {
 	if (!fs.existsSync(dir)) {
 		fs.mkdirSync(dir, { recursive: true });
 	}
+	if (fs.existsSync(filePath)) {
+		vscode.window.showWarningMessage("This file already exists.");
+		return;
+	}
 	fs.writeFileSync(filePath, "", { flag: "w" });
 }
 
