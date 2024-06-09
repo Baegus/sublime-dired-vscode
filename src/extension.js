@@ -317,8 +317,10 @@ const diredSelect = async (provider) => {
 	}
 	// Current line is a file, open it in VSCode:
 	const filePath = path.join(currentDirectory, currentLine);
-	const doc = await vscode.workspace.openTextDocument(path.join(currentDirectory, currentLine));
-	vscode.window.showTextDocument(doc);
+	const fileExtension = path.extname(currentLine).toLowerCase();
+
+	const fileUri = vscode.Uri.file(filePath);
+	await vscode.commands.executeCommand('vscode.open', fileUri);
 }
 
 /**
@@ -470,6 +472,75 @@ const moveCursorToName = async (provider = null) => {
 	editor.revealRange(range);
 }
 
+let previewEnabled = false;
+let previewEditor = null;
+let diredEditor = null;
+let selectionChangeListener = null;
+
+/**
+ * Shows a second editor view alongside the current one and previews (opens) the file 
+ * on the cursor position.
+*/
+const toggleDiredPreviewMode = async (provider = null) => {
+	const editor = vscode.window.activeTextEditor;
+	if (!editor) return;
+
+	diredEditor = editor;
+
+	if (previewEnabled) {
+		// Disable preview mode by closing the preview editor and removing the listener
+		if (previewEditor) {
+			const previewColumn = previewEditor.viewColumn;
+			await vscode.commands.executeCommand("workbench.action.closeEditorsInOtherGroups");
+			previewEditor = null;
+		}
+		if (selectionChangeListener) {
+			selectionChangeListener.dispose();
+		}
+		previewEnabled = false;
+		vscode.window.showInformationMessage("Dired Preview Mode Disabled");
+		return;
+	}
+
+	previewEnabled = true;
+	await updatePreview(editor);
+
+	selectionChangeListener = vscode.window.onDidChangeTextEditorSelection(async (event) => {
+		if (event.textEditor !== editor) return;
+		if (previewEnabled) {
+			await updatePreview(event.textEditor, true);
+		}
+	});
+
+	vscode.window.showInformationMessage("Dired Preview Mode Enabled");
+
+	if (provider) {
+		provider.notifyContentChanged();
+	}
+}
+
+const updatePreview = async (editor, preserveFocus = false) => {
+	const currentLineNumber = editor.selection.active.line;
+	if (!isLineFileOrDir(currentLineNumber)) return;
+
+	const currentLine = editor.document.lineAt(currentLineNumber).text;
+	if (currentLine.endsWith(path.sep)) {
+		// Current line is a directory, don't preview directories.
+		return;
+	}
+
+	// Current line is a file, open it in preview mode:
+	const filePath = path.join(currentDirectory, currentLine);
+	const fileExtension = path.extname(currentLine).toLowerCase();
+
+	const openEditorOptions = { preview: true, viewColumn: vscode.ViewColumn.Beside, preserveFocus: true };
+
+	const fileUri = vscode.Uri.file(filePath);
+	await vscode.commands.executeCommand('vscode.open', fileUri, openEditorOptions);
+
+	// Set focus back to the dired editor
+	await vscode.window.showTextDocument(diredEditor.document, { viewColumn: diredEditor.viewColumn, preserveFocus: true });
+}
 
 function activate(context) {
 	const provider = new DiredProvider();
@@ -492,6 +563,7 @@ function activate(context) {
 		["diredPrev", () => moveCursorTo(provider, -1)],
 		["diredNext", () => moveCursorTo(provider, 1)],
 		["diredJumpToName", () => moveCursorToName(provider)],
+		["diredPreview", () => toggleDiredPreviewMode(provider)],
 	];
 	commands.forEach((item) => {
 		const registered = vscode.commands.registerCommand(`extension.${item[0]}`, item[1]);

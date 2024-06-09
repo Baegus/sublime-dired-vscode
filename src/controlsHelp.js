@@ -32,7 +32,7 @@ const controlsHelp = {
 			// ["ra", "remove from project (NOT YET IMPLEMENTED)"],
 		// ],
 		[
-			// ["P", "toggle Preview mode on/off (NOT YET IMPLEMENTED)"],
+			["P", "toggle Preview mode on/off"],
 			["j", "jump to file/dir name"],
 		],
 	],
