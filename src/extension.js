@@ -5,23 +5,18 @@ const path = require('path');
 let currentDirectory = false;
 let lastWorkingDirectory = false;
 let lastFileLineNumber = 2; // On which line the last file is located
-let currentDocumentContent = "";
 
-const getCurrentFileContent = () => {
+const getCurrentFileContent = (renaming=false) => {
 	if (!currentDirectory) {
 		return "No directory selected.";
 	}
-
-	const renameModeOn = isRenameModeEnabled();
-
-	console.log("rename mode is", renameModeOn);
 
 	let files = tryReadingDirectory(currentDirectory);
 	if (!files && lastWorkingDirectory !== false) {
 		files = tryReadingDirectory(lastWorkingDirectory);
 	}
 
-	let fileContent = `${currentDirectory}${path.sep}\n\n`;
+	let fileContent = `${renaming?"Renaming in ":""}${currentDirectory}${path.sep}\n\n`;
 
 	if (!files) {
 		fileContent += "Error reading from disk.";
@@ -45,7 +40,7 @@ const getCurrentFileContent = () => {
 	lastFileLineNumber = files.length + 1;
 
 	fileContent += "\n\n";
-	fileContent += controlsHelpStrings[renameModeOn ? "rename" : "default"];
+	fileContent += controlsHelpStrings[renaming ? "rename" : "default"];
 
 	return fileContent;
 }
@@ -109,7 +104,7 @@ for (key in controlsHelp) {
  * Turn Rename mode on/off
  * @param {boolean} on - if true, Rename mode is on
  */
-const setRenameMode = async (on=true) => {
+const setRenameMode = async (on = true) => {
 	const config = vscode.workspace.getConfiguration("dired");
 	await config.update("renameMode", on, vscode.ConfigurationTarget.Global);
 }
@@ -125,10 +120,11 @@ const isRenameModeEnabled = () => {
 /**
  * Enter Rename mode
  */
-const enterRenameMode = async (provider=null) => {
+const enterRenameMode = async (provider = null) => {
 	if (isRenameModeEnabled()) return;
 	await setRenameMode(true);
-	await showCurrentDirectory(provider);
+	await vscode.commands.executeCommand('workbench.action.revertAndCloseActiveEditor');
+	await showRenameBuffer(provider);
 }
 
 /**
@@ -136,11 +132,35 @@ const enterRenameMode = async (provider=null) => {
  */
 const diredRenameCancel = async (provider = null) => {
 	await setRenameMode(false);
+	// Reset the document to its original state to avoid save prompt and close:
+	await vscode.commands.executeCommand('workbench.action.revertAndCloseActiveEditor');
+	await showCurrentDirectory(provider);
+}
+
+/**
+ * Show the rename buffer for editing
+ */
+const showRenameBuffer = async (provider = null) => {
+	const content = getCurrentFileContent(true);
+
+	const document = await vscode.workspace.openTextDocument({ content, language: 'dired' });
+	const editor = await vscode.window.showTextDocument(document, { preview: false, viewColumn: vscode.ViewColumn.Active, readOnly: false });
+
+	if (!editor) {
+		return;
+	}
+
 	if (provider) {
 		provider.notifyContentChanged();
 	}
-}
 
+	const moveCursorToFirstEntry = () => {
+		const range = editor.document.lineAt(2).range;
+		editor.selection = new vscode.Selection(range.start, range.start);
+		editor.revealRange(range);
+	}
+	moveCursorToFirstEntry();
+}
 
 /**
  * Try reading the desired directory. If reading fails, returns false.
@@ -160,7 +180,50 @@ const tryReadingDirectory = (dir) => {
 }
 
 /**
- * Allows changing the dired temp file contents and watching for changes.
+ * Update the actual files and directories based on the changes made in the rename buffer
+ */
+const applyRenameChanges = async (provider = null) => {
+	const editor = vscode.window.activeTextEditor;
+	if (!editor) return;
+
+	const newContent = editor.document.getText();
+	const oldContent = getCurrentFileContent(true);
+
+	const entriesToArray = (entriesString) => {
+		return entriesString.split('\n').slice(2, -3);
+	}
+
+	// Compare oldContent and newContent to find renames
+	const oldFiles = entriesToArray(oldContent);
+	const newFiles = entriesToArray(newContent);
+
+	if (newFiles.length !== oldFiles.length) {
+		vscode.window.showWarningMessage("Adding or removing lines isn't allowed in Rename mode. Make sure you keep the file count the same.");
+		return;
+	}
+
+	const duplicates = newFiles.filter((item, index) => newFiles.indexOf(item) !== index);
+	if (duplicates.length > 0) {
+		vscode.window.showWarningMessage(`Some entries have the same names: ${duplicates.join("; ")}`);
+		return;
+	}
+
+	for (let i = 0; i < oldFiles.length; i++) {
+		if (oldFiles[i] === newFiles[i]) continue;
+		const oldPath = path.join(currentDirectory, oldFiles[i]);
+		const newPath = path.join(currentDirectory, newFiles[i]);
+		fs.renameSync(oldPath, newPath);
+	}
+
+	await setRenameMode(false);
+
+	// Reset the document to its original state to avoid save prompt and close:
+	await vscode.commands.executeCommand('workbench.action.revertAndCloseActiveEditor');
+	await showCurrentDirectory(provider);
+}
+
+/**
+ * Allows changing the dired buffer contents and watching for changes.
  */
 class DiredProvider {
 	constructor() {
@@ -169,7 +232,7 @@ class DiredProvider {
 	}
 
 	/**
-	 * Writes the text contents to the temp file.
+	 * Provides the text document content for the dired buffer.
 	*/
 	provideTextDocumentContent(uri) {
 		return getCurrentFileContent();
@@ -188,16 +251,17 @@ const showCurrentDirectory = async (provider = null) => {
 
 	const uri = vscode.Uri.parse('dired://authority/dired');
 	const document = await vscode.workspace.openTextDocument(uri);
+
 	const renameModeOn = isRenameModeEnabled(); // Check if Rename mode is enabled
-	const editor = await vscode.window.showTextDocument(document, { preview: false, readOnly: false });
+	const editor = await vscode.window.showTextDocument(document, { preview: false });
+
 	await vscode.languages.setTextDocumentLanguage(document, "dired");
+
 	if (!editor) {
 		return;
 	}
 
 	lastWorkingDirectory = currentDirectory;
-
-	editor.options.readOnly = !renameModeOn;
 
 	if (provider) {
 		provider.notifyContentChanged();
@@ -217,7 +281,6 @@ const showCurrentDirectory = async (provider = null) => {
 	};
 
 	const moveCursorOnChangeDisposable = vscode.workspace.onDidChangeTextDocument(moveCursorOnChange);
-	
 }
 
 /**
@@ -232,7 +295,7 @@ const diredUp = async (provider) => {
 		return;
 	}
 	if (!parentDir) {
-		vscode.window.showInformationMessage("Cannot read the parent directory.");
+		vscode.window.showWarningMessage("Cannot read the parent directory.");
 		return;
 	}
 
@@ -259,7 +322,7 @@ const diredBuffer = async (provider) => {
 }
 
 /**
- * Marks the current file/directory as seleceted to allow multiple file operations.
+ * Marks the current file/directory as selected to allow multiple file operations.
  * NOT YET IMPLEMENTED.
  */
 const diredMark = async (args) => {
@@ -319,6 +382,7 @@ function activate(context) {
 		["diredUp", () => diredUp(provider)],
 		["diredRename", () => enterRenameMode(provider)],
 		["diredRenameCancel", () => diredRenameCancel(provider)],
+		["diredRenameCommit", () => applyRenameChanges(provider)],
 	];
 	commands.forEach((item) => {
 		const registered = vscode.commands.registerCommand(`extension.${item[0]}`, item[1]);
