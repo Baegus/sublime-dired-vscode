@@ -57,17 +57,13 @@
 		],
 		"keybindings": [
 			{
-				"key": "n",
-				"command": "extension.diredNextLine",
+				"key": "p",
+				"command": "extension.diredPrev",
 				"when": "editorTextFocus && editorLangId == 'dired' && !config.dired.renameMode"
 			},
 			{
-				"key": "p",
-				"command": "extension.diredNextLine",
-				"args": {
-					"forward": false
-				},
-				
+				"key": "n",
+				"command": "extension.diredNext",
 				"when": "editorTextFocus && editorLangId == 'dired' && !config.dired.renameMode"
 			},
 			{
@@ -209,7 +205,7 @@
 				"when": "editorTextFocus && editorLangId == 'dired' && !config.dired.renameMode"
 			},
 			{
-				"key": "P",
+				"key": "shift+p",
 				"command": "extension.diredPreview",
 				"when": "editorTextFocus && editorLangId == 'dired' && !config.dired.renameMode"
 			},

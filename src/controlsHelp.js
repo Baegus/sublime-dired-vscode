@@ -14,14 +14,14 @@ const controlsHelp = {
 			["R", "rename"],
 			// ["M", "move (NOT YET IMPLEMENTED)"],
 			["D", "delete"],
-			["cd", "create directory (NOT YET IMPLEMENTED)"],
-			["cf", "create file (NOT YET IMPLEMENTED)"],
+			["cd", "create directory"],
+			["cf", "create file"],
 		],
 		[
 			["u", "up to parent directory"],
 			// ["g", "goto directory (NOT YET IMPLEMENTED)"],
-			// ["p", "move to previous file (NOT YET IMPLEMENTED)"],
-			// ["n", "move to next file (NOT YET IMPLEMENTED)"],
+			["p", "move to previous file"],
+			["n", "move to next file"],
 			["rv", "refresh view"],
 		],
 		// [

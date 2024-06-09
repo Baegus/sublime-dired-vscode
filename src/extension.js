@@ -353,6 +353,10 @@ const diredDelete = async (provider) => {
 	});
 }
 
+/**
+ * Recursively create directories from a path
+ * @param {string} targetDir - the full directory structure that will get created
+ */
 const createDirectories = (targetDir) => {
 	const sep = path.sep;
 	const initDir = path.isAbsolute(targetDir) ? sep : '';
@@ -371,6 +375,10 @@ const createDirectories = (targetDir) => {
 	}, initDir);
 }
 
+/**
+ * Recursively create directories and, finally, a single empty file, from a path
+ * @param {string} filePath - the full directory structure that will get created and/or a filename
+ */
 const createFile = (filePath) => {
 	const dir = path.dirname(filePath);
 	if (!fs.existsSync(dir)) {
@@ -379,6 +387,9 @@ const createFile = (filePath) => {
 	fs.writeFileSync(filePath, '', { flag: 'w' });
 }
 
+/**
+ * Show an input box to enter the name(s) of directories to create
+ */
 const diredCreateDirectory = (provider = null) => {
 	vscode.window.showInputBox({ prompt: "Enter directory name, you can use \\ or / to create structures" }).then(value => {
 		if (!value) {
@@ -386,12 +397,15 @@ const diredCreateDirectory = (provider = null) => {
 			return;
 		}
 
-		// Process the input and create the directories
+		// Process the input and create the directories:
 		createDirectories(path.join(currentDirectory, value));
 		diredRefresh(provider);
 	});
 }
 
+/**
+ * Show an input box to enter the name(s) of directories and/or a filename to create
+ */
 const diredCreateFile = (provider = null) => {
 	vscode.window.showInputBox({ prompt: "Enter file name, you can use \\ or / to create structures" }).then(value => {
 		if (!value) {
@@ -404,6 +418,29 @@ const diredCreateFile = (provider = null) => {
 		createFile(filePath);
 		diredRefresh(provider);
 	});
+}
+
+/**
+ * Moves the cursor by n items forwards or backwards
+ * @param {int} direction - how many items forwards should we move, may be negative
+ */
+const moveCursorTo = (provider = null, direction = 1) => {
+	const editor = vscode.window.activeTextEditor;
+	if (!editor) return;
+
+	const currentLineNumber = editor.selection.active.line;
+	let targetLine = currentLineNumber+direction;
+	if (!isLineFileOrDir(targetLine)) {
+		if (targetLine < 2) {
+			targetLine = 2;
+		} else {
+			targetLine = lastFileLineNumber;
+		}
+	}
+
+	const range = editor.document.lineAt(targetLine).range;
+	editor.selection = new vscode.Selection(range.start, range.start);
+	editor.revealRange(range);
 }
 
 
@@ -425,6 +462,8 @@ function activate(context) {
 		["diredDelete", () => diredDelete(provider)],
 		["diredCreateFile", () => diredCreateFile(provider)],
 		["diredCreateDirectory", () => diredCreateDirectory(provider)],
+		["diredPrev", () => moveCursorTo(provider, -1)],
+		["diredNext", () => moveCursorTo(provider, 1)],
 	];
 	commands.forEach((item) => {
 		const registered = vscode.commands.registerCommand(`extension.${item[0]}`, item[1]);
