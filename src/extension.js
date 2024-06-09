@@ -315,6 +315,38 @@ const diredSelect = async (provider) => {
 	});
 }
 
+/**
+ * Deletes a single file/directory based on the current cursor position.
+ */
+const diredDelete = async (provider) => {
+	const editor = vscode.window.activeTextEditor;
+	if (!editor) return;
+
+	const currentLineNumber = editor.selection.active.line;
+	if (!isLineFileOrDir(currentLineNumber)) return;
+
+	const currentLine = editor.document.lineAt(currentLineNumber).text;
+	const fullPath = path.join(currentDirectory, currentLine);
+	const isDirectory = currentLine.endsWith(path.sep);
+	const typeString = isDirectory ? "directory" : "file";
+	const confirmButton = "Confirm delete";
+	vscode.window.showInformationMessage(
+		`Delete ${typeString} ${currentLine}?`,
+		{ modal: true },
+		{ title: confirmButton },
+	).then(async (answer) => {
+		if (!answer) return;
+		if (answer.title !== confirmButton) return;
+		if (isDirectory)  {
+			fs.rmdirSync(fullPath)
+		} else {
+			fs.unlinkSync(fullPath);
+		}
+		await showCurrentDirectory(provider);
+	});
+}
+
+
 function activate(context) {
 	const provider = new DiredProvider();
 	const providerRegistration = vscode.workspace.registerTextDocumentContentProvider('dired', provider);
@@ -329,6 +361,7 @@ function activate(context) {
 		["diredRename", () => enterRenameMode(provider)],
 		["diredRenameCancel", () => diredRenameCancel(provider)],
 		["diredRenameCommit", () => applyRenameChanges(provider)],
+		["diredDelete", () => diredDelete(provider)],
 	];
 	commands.forEach((item) => {
 		const registered = vscode.commands.registerCommand(`extension.${item[0]}`, item[1]);

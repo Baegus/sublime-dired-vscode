@@ -13,6 +13,7 @@ const controlsHelp = {
 			["D", "delete (NOT YET IMPLEMENTED)"],
 			["cd", "create directory (NOT YET IMPLEMENTED)"],
 			["cf", "create file (NOT YET IMPLEMENTED)"],
+			["D", "delete"],
 		],
 		[
 			["u", "up to parent directory"],
