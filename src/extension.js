@@ -345,11 +345,64 @@ const diredDelete = async (provider) => {
 		if (!answer) return;
 		if (answer.title !== confirmButton) return;
 		if (isDirectory)  {
-			fs.rmdirSync(fullPath)
+			fs.rmSync(fullPath, { recursive: true, force: true })
 		} else {
 			fs.unlinkSync(fullPath);
 		}
 		await showCurrentDirectory(provider);
+	});
+}
+
+const createDirectories = (targetDir) => {
+	const sep = path.sep;
+	const initDir = path.isAbsolute(targetDir) ? sep : '';
+	targetDir.split(sep).reduce((parentDir, childDir) => {
+		const curDir = path.resolve(parentDir, childDir);
+		try {
+			if (!fs.existsSync(curDir)) {
+				fs.mkdirSync(curDir);
+			}
+		} catch (err) {
+			vscode.window.showErrorMessage(`Failed to create directory: ${err.message}`);
+			throw err;
+		}
+
+		return curDir;
+	}, initDir);
+}
+
+const createFile = (filePath) => {
+	const dir = path.dirname(filePath);
+	if (!fs.existsSync(dir)) {
+		fs.mkdirSync(dir, { recursive: true });
+	}
+	fs.writeFileSync(filePath, '', { flag: 'w' });
+}
+
+const diredCreateDirectory = (provider = null) => {
+	vscode.window.showInputBox({ prompt: "Enter directory name, you can use \\ or / to create structures" }).then(value => {
+		if (!value) {
+			vscode.window.showWarningMessage("No directory name provided");
+			return;
+		}
+
+		// Process the input and create the directories
+		createDirectories(path.join(currentDirectory, value));
+		diredRefresh(provider);
+	});
+}
+
+const diredCreateFile = (provider = null) => {
+	vscode.window.showInputBox({ prompt: "Enter file name, you can use \\ or / to create structures" }).then(value => {
+		if (!value) {
+			vscode.window.showWarningMessage("No file name provided");
+			return;
+		}
+
+		// Process the input and create the file
+		const filePath = path.join(currentDirectory, value);
+		createFile(filePath);
+		diredRefresh(provider);
 	});
 }
 
@@ -370,6 +423,8 @@ function activate(context) {
 		["diredRenameCancel", () => diredRenameCancel(provider)],
 		["diredRenameCommit", () => applyRenameChanges(provider)],
 		["diredDelete", () => diredDelete(provider)],
+		["diredCreateFile", () => diredCreateFile(provider)],
+		["diredCreateDirectory", () => diredCreateDirectory(provider)],
 	];
 	commands.forEach((item) => {
 		const registered = vscode.commands.registerCommand(`extension.${item[0]}`, item[1]);

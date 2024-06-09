@@ -98,18 +98,12 @@
 			},
 			{
 				"key": "c d",
-				"command": "extension.diredCreate",
-				"args": {
-					"which": "directory"
-				},
+				"command": "extension.diredCreateDirectory",
 				"when": "editorTextFocus && editorLangId == 'dired' && !config.dired.renameMode"
 			},
 			{
 				"key": "c f",
-				"command": "extension.diredCreate",
-				"args": {
-					"which": "file"
-				},
+				"command": "extension.diredCreateFile",
 				"when": "editorTextFocus && editorLangId == 'dired' && !config.dired.renameMode"
 			},
 			{

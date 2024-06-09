@@ -14,8 +14,8 @@ const controlsHelp = {
 			["R", "rename"],
 			// ["M", "move (NOT YET IMPLEMENTED)"],
 			["D", "delete"],
-			// ["cd", "create directory (NOT YET IMPLEMENTED)"],
-			// ["cf", "create file (NOT YET IMPLEMENTED)"],
+			["cd", "create directory (NOT YET IMPLEMENTED)"],
+			["cf", "create file (NOT YET IMPLEMENTED)"],
 		],
 		[
 			["u", "up to parent directory"],
