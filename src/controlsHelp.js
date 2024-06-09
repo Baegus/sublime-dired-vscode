@@ -31,10 +31,10 @@ const controlsHelp = {
 			// ["rb", "remove from bookmark (NOT YET IMPLEMENTED)"],
 			// ["ra", "remove from project (NOT YET IMPLEMENTED)"],
 		// ],
-		// [
+		[
 			// ["P", "toggle Preview mode on/off (NOT YET IMPLEMENTED)"],
-			// ["j", "jump to file/dir name (NOT YET IMPLEMENTED)"],
-		// ],
+			["j", "jump to file/dir name"],
+		],
 	],
 	rename: [
 		[

@@ -443,6 +443,30 @@ const moveCursorTo = (provider = null, direction = 1) => {
 	editor.revealRange(range);
 }
 
+/**
+ * Show an input box to enter the name(s) of directory / file to move the cursor to.
+ */
+const moveCursorToName = async (provider = null) => {
+	const editor = vscode.window.activeTextEditor;
+	if (!editor) return;
+
+	const document = editor.document;
+	const text = document.getText();
+	const lines = text.split("\n").slice(2,lastFileLineNumber+1);
+
+	const selectedValue = await vscode.window.showQuickPick(lines, {
+		placeHolder: "Enter file / directory name to move the cursor to",
+		canPickMany: false,
+	});
+
+	if (!selectedValue) return;
+
+	const targetLine = lines.indexOf(selectedValue) + 2;
+
+	const range = editor.document.lineAt(targetLine).range;
+	editor.selection = new vscode.Selection(range.start, range.start);
+	editor.revealRange(range);
+}
 
 function activate(context) {
 	const provider = new DiredProvider();
@@ -464,6 +488,7 @@ function activate(context) {
 		["diredCreateDirectory", () => diredCreateDirectory(provider)],
 		["diredPrev", () => moveCursorTo(provider, -1)],
 		["diredNext", () => moveCursorTo(provider, 1)],
+		["diredJumpToName", () => moveCursorToName(provider)],
 	];
 	commands.forEach((item) => {
 		const registered = vscode.commands.registerCommand(`extension.${item[0]}`, item[1]);
