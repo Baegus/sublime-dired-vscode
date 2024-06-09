@@ -1,11 +1,11 @@
 const controlsHelp = {
 	default: [
-		[
+		// [
 			// ["m", "toggle mark (NOT YET IMPLEMENTED)"],
 			// ["t", "toggle all marks (NOT YET IMPLEMENTED)"],
 			// ["U", "unmark all (NOT YET IMPLEMENTED)"],
 			// ["*.", "mark by file extension (NOT YET IMPLEMENTED)"],
-		],
+		// ],
 		[
 			["Enter/o", "Open file / view directory"],
 			["R", "rename"],
@@ -21,17 +21,17 @@ const controlsHelp = {
 			// ["n", "move to next file (NOT YET IMPLEMENTED)"],
 			// ["r", "refresh view (NOT YET IMPLEMENTED)"],
 		],
-		[
+		// [
 			// ["B", "Goto Anywhere (goto any directory, bookmark or project dir) (NOT YET IMPLEMENTED)"],
 			// ["ab", "add to bookmarks (NOT YET IMPLEMENTED)"],
 			// ["ap", "add to project (NOT YET IMPLEMENTED)"],
 			// ["rb", "remove from bookmark (NOT YET IMPLEMENTED)"],
 			// ["ra", "remove from project (NOT YET IMPLEMENTED)"],
-		],
-		[
+		// ],
+		// [
 			// ["P", "toggle Preview mode on/off (NOT YET IMPLEMENTED)"],
 			// ["j", "jump to file/dir name (NOT YET IMPLEMENTED)"],
-		],
+		// ],
 	],
 	rename: [
 		[
