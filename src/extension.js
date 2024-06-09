@@ -317,9 +317,8 @@ const diredSelect = async (provider) => {
 	}
 	// Current line is a file, open it in VSCode:
 	const filePath = path.join(currentDirectory, currentLine);
-	vscode.workspace.openTextDocument(path.join(currentDirectory, currentLine)).then(doc => {
-		vscode.window.showTextDocument(doc);
-	});
+	const doc = await vscode.workspace.openTextDocument(path.join(currentDirectory, currentLine));
+	vscode.window.showTextDocument(doc);
 }
 
 /**
@@ -337,20 +336,21 @@ const diredDelete = async (provider) => {
 	const isDirectory = currentLine.endsWith(path.sep);
 	const typeString = isDirectory ? "directory" : "file";
 	const confirmButton = "Confirm delete";
-	vscode.window.showInformationMessage(
+	
+	const answer = await vscode.window.showInformationMessage(
 		`Delete ${typeString} ${currentLine}?`,
 		{ modal: true },
 		{ title: confirmButton },
-	).then(async (answer) => {
-		if (!answer) return;
-		if (answer.title !== confirmButton) return;
-		if (isDirectory)  {
-			fs.rmSync(fullPath, { recursive: true, force: true })
-		} else {
-			fs.unlinkSync(fullPath);
-		}
-		await showCurrentDirectory(provider);
-	});
+	);
+
+	if (!answer) return;
+	if (answer.title !== confirmButton) return;
+	if (isDirectory)  {
+		fs.rmSync(fullPath, { recursive: true, force: true })
+	} else {
+		fs.unlinkSync(fullPath);
+	}
+	await showCurrentDirectory(provider);
 }
 
 /**
@@ -394,34 +394,32 @@ const createFile = (filePath) => {
 /**
  * Show an input box to enter the name(s) of directories to create
  */
-const diredCreateDirectory = (provider = null) => {
-	vscode.window.showInputBox({ prompt: "Enter directory name, you can use \\ or / to create structures" }).then(value => {
-		if (!value) {
-			vscode.window.showWarningMessage("No directory name provided");
-			return;
-		}
+const diredCreateDirectory = async (provider = null) => {
+	const value = await vscode.window.showInputBox({ prompt: "Enter directory name, you can use \\ or / to create structures" });
+	if (!value) {
+		vscode.window.showWarningMessage("No directory name provided");
+		return;
+	}
 
-		// Process the input and create the directories:
-		createDirectories(path.join(currentDirectory, value));
-		diredRefresh(provider);
-	});
+	// Process the input and create the directories:
+	createDirectories(path.join(currentDirectory, value));
+	diredRefresh(provider);
 }
 
 /**
  * Show an input box to enter the name(s) of directories and/or a filename to create
  */
-const diredCreateFile = (provider = null) => {
-	vscode.window.showInputBox({ prompt: "Enter file name, you can use \\ or / to create structures" }).then(value => {
-		if (!value) {
-			vscode.window.showWarningMessage("No file name provided");
-			return;
-		}
+const diredCreateFile = async (provider = null) => {
+	const value = await vscode.window.showInputBox({ prompt: "Enter file name, you can use \\ or / to create structures" });
+	if (!value) {
+		vscode.window.showWarningMessage("No file name provided");
+		return;
+	}
 
-		// Process the input and create the file
-		const filePath = path.join(currentDirectory, value);
-		createFile(filePath);
-		diredRefresh(provider);
-	});
+	// Process the input and create the file
+	const filePath = path.join(currentDirectory, value);
+	createFile(filePath);
+	diredRefresh(provider);
 }
 
 /**
