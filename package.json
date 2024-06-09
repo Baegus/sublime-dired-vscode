@@ -116,7 +116,7 @@
 				"when": "editorTextFocus && editorLangId == 'dired' && !config.dired.renameMode"
 			},
 			{
-				"key": "U",
+				"key": "shift+u",
 				"command": "extension.diredMark",
 				"args": {
 					"mark": false,

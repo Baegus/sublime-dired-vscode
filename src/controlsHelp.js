@@ -1,4 +1,4 @@
-const os = require('os');
+const os = require("os");
 const isMacOS = os.platform() === "darwin";
 
 const controlsHelp = {

@@ -1,7 +1,7 @@
-const vscode = require('vscode');
-const fs = require('fs');
-const path = require('path');
-const { controlsHelp, controlsHelpStrings } = require('./controlsHelp');
+const vscode = require("vscode");
+const fs = require("fs");
+const path = require("path");
+const { controlsHelp, controlsHelpStrings } = require("./controlsHelp");
 
 let currentDirectory = false;
 let lastWorkingDirectory = false;
@@ -36,7 +36,7 @@ const getCurrentFileContent = (renaming=false) => {
 			return `${file} (access denied)`;
 		}
 		return text;
-	}).join('\n');
+	}).join("\n");
 
 	lastFileLineNumber = files.length + 1;
 
@@ -69,7 +69,7 @@ const isRenameModeEnabled = () => {
 const enterRenameMode = async (provider = null) => {
 	if (isRenameModeEnabled()) return;
 	await setRenameMode(true);
-	await vscode.commands.executeCommand('workbench.action.revertAndCloseActiveEditor');
+	await vscode.commands.executeCommand("workbench.action.revertAndCloseActiveEditor");
 	await showRenameBuffer(provider);
 }
 
@@ -79,7 +79,7 @@ const enterRenameMode = async (provider = null) => {
 const diredRenameCancel = async (provider = null) => {
 	await setRenameMode(false);
 	// Reset the document to its original state to avoid save prompt and close:
-	await vscode.commands.executeCommand('workbench.action.revertAndCloseActiveEditor');
+	await vscode.commands.executeCommand("workbench.action.revertAndCloseActiveEditor");
 	await showCurrentDirectory(provider);
 }
 
@@ -89,7 +89,7 @@ const diredRenameCancel = async (provider = null) => {
 const showRenameBuffer = async (provider = null) => {
 	const content = getCurrentFileContent(true);
 
-	const document = await vscode.workspace.openTextDocument({ content, language: 'dired' });
+	const document = await vscode.workspace.openTextDocument({ content, language: "dired" });
 	const editor = await vscode.window.showTextDocument(document, { preview: false, viewColumn: vscode.ViewColumn.Active, readOnly: false });
 
 	if (!editor) {
@@ -136,7 +136,7 @@ const applyRenameChanges = async (provider = null) => {
 	const oldContent = getCurrentFileContent(true);
 
 	const entriesToArray = (entriesString) => {
-		return entriesString.split('\n').slice(2, -3);
+		return entriesString.split("\n").slice(2, -3);
 	}
 
 	// Compare oldContent and newContent to find renames
@@ -164,7 +164,7 @@ const applyRenameChanges = async (provider = null) => {
 	await setRenameMode(false);
 
 	// Reset the document to its original state to avoid save prompt and close:
-	await vscode.commands.executeCommand('workbench.action.revertAndCloseActiveEditor');
+	await vscode.commands.executeCommand("workbench.action.revertAndCloseActiveEditor");
 	await showCurrentDirectory(provider);
 }
 
@@ -185,7 +185,7 @@ class DiredProvider {
 	}
 
 	notifyContentChanged() {
-		this._onDidChange.fire(vscode.Uri.parse('dired://authority/dired'));
+		this._onDidChange.fire(vscode.Uri.parse("dired://authority/dired"));
 	}
 }
 
@@ -195,7 +195,7 @@ class DiredProvider {
 const showCurrentDirectory = async (provider = null) => {
 	if (!currentDirectory) return;
 
-	const uri = vscode.Uri.parse('dired://authority/dired');
+	const uri = vscode.Uri.parse("dired://authority/dired");
 	const document = await vscode.workspace.openTextDocument(uri);
 
 	const renameModeOn = isRenameModeEnabled(); // Check if Rename mode is enabled
@@ -235,7 +235,7 @@ const showCurrentDirectory = async (provider = null) => {
 const diredUp = async (provider) => {
 	if (!currentDirectory) return;
 
-	const parentDir = path.resolve(currentDirectory, '..');
+	const parentDir = path.resolve(currentDirectory, "..");
 	if (parentDir === currentDirectory) {
 		vscode.window.showInformationMessage("You are in the root directory.");
 		return;
@@ -359,7 +359,7 @@ const diredDelete = async (provider) => {
  */
 const createDirectories = (targetDir) => {
 	const sep = path.sep;
-	const initDir = path.isAbsolute(targetDir) ? sep : '';
+	const initDir = path.isAbsolute(targetDir) ? sep : "";
 	targetDir.split(sep).reduce((parentDir, childDir) => {
 		const curDir = path.resolve(parentDir, childDir);
 		try {
@@ -384,7 +384,7 @@ const createFile = (filePath) => {
 	if (!fs.existsSync(dir)) {
 		fs.mkdirSync(dir, { recursive: true });
 	}
-	fs.writeFileSync(filePath, '', { flag: 'w' });
+	fs.writeFileSync(filePath, "", { flag: "w" });
 }
 
 /**
@@ -468,9 +468,10 @@ const moveCursorToName = async (provider = null) => {
 	editor.revealRange(range);
 }
 
+
 function activate(context) {
 	const provider = new DiredProvider();
-	const providerRegistration = vscode.workspace.registerTextDocumentContentProvider('dired', provider);
+	const providerRegistration = vscode.workspace.registerTextDocumentContentProvider("dired", provider);
 
 	context.subscriptions.push(providerRegistration);
 
