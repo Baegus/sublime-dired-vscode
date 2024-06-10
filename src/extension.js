@@ -361,10 +361,13 @@ const getPathsOfSelectedEntries = () => {
 	}
 
 	if (paths.length === 0) {
-		// No marked lines, select the item on cursor's position:
-		const currentLineNumber = editor.selection.active.line;
-		if (!isLineFileOrDir(currentLineNumber)) return paths;
-		paths.push(fullPathFromLineNumber(currentLineNumber));
+		// No marked lines, select the item on cursor position(s):
+		const selections = editor.selections;
+		selections.forEach(selection => {
+			const lineNumber = selection.active.line;
+			if (!isLineFileOrDir(lineNumber)) return;
+			paths.push(fullPathFromLineNumber(lineNumber));
+		});
 	}
 
 	return paths;
@@ -411,6 +414,44 @@ const diredDelete = async (provider) => {
 		} else {
 			fs.unlinkSync(fullPath);
 		}
+	});
+	await showCurrentDirectory(provider);
+}
+
+/**
+ * Moves selected files/directories to specified location from a file browser
+ * @param {vscode.TextDocumentContentProvider} provider
+ */
+const diredMove = async (provider) => {
+	const editor = vscode.window.activeTextEditor;
+	if (!editor) return;
+
+	const pathsToMove = getPathsOfSelectedEntries();
+
+	if (pathsToMove.length === 0) return;
+
+	const uri = await vscode.window.showOpenDialog({
+		canSelectFolders: true,
+		canSelectFiles: false,
+		canSelectMany: false,
+		defaultUri: vscode.Uri.file(currentDirectory),
+	});
+
+	if (!uri || uri.length === 0) {
+		return;
+	}
+
+	const moveToPath = uri[0].fsPath;
+
+	if (moveToPath === currentDirectory) {
+		vscode.window.showInformationMessage("The destination path is the same as the source path.");
+		return;
+	}
+
+	pathsToMove.forEach((fullPath) => {
+		const fileName = path.basename(fullPath);
+		const newFullPath = path.join(moveToPath, fileName);
+		fs.renameSync(fullPath, newFullPath);
 	});
 	await showCurrentDirectory(provider);
 }
@@ -742,6 +783,7 @@ function activate(context) {
 		["diredRenameCancel", () => diredRenameCancel(provider)],
 		["diredRenameCommit", () => applyRenameChanges(provider)],
 		["diredDelete", () => diredDelete(provider)],
+		["diredMove", () => diredMove(provider)],
 		["diredCreateFile", () => diredCreateFile(provider)],
 		["diredCreateDirectory", () => diredCreateDirectory(provider)],
 		["diredPrev", () => moveCursorTo(provider, -1)],

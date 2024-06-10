@@ -12,7 +12,7 @@ const controlsHelp = {
 		[
 			["Enter/o", "Open file / view directory"],
 			["R", "rename"],
-			// ["M", "move (NOT YET IMPLEMENTED)"],
+			["M", "move"],
 			["D", "delete"],
 			["cd", "create directory"],
 			["cf", "create file"],
