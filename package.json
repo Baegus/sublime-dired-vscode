@@ -138,8 +138,8 @@
 				"when": "editorTextFocus && editorLangId == 'dired' && !config.dired.renameMode"
 			},
 			{
-				"key": "shift+8 .",
-				"command": "extension.diredMarkExtension",
+				"key": "s",
+				"command": "extension.diredMarkByPartialName",
 				"when": "editorTextFocus && editorLangId == 'dired' && !config.dired.renameMode"
 			},
 			{

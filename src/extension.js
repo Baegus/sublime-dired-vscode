@@ -660,6 +660,34 @@ const diredInvertMarks = async (provider = null) => {
 }
 
 
+/**
+ * Shows a textbox to enter a search query, marks all files / directories
+ * containing entered string.
+*/
+const diredMarkByPartialName = async () => {
+	const editor = vscode.window.activeTextEditor;
+	if (!editor) {
+		return;
+	}
+
+	const value = await vscode.window.showInputBox({ prompt: "Enter a search string, all entries containing it will get marked" });
+	if (!value) {
+		vscode.window.showWarningMessage("No search string provided");
+		return;
+	}
+
+	for(let i=2;i<=lastFileLineNumber;i++) {
+		const currentLineText = editor.document.lineAt(i).text;
+		if (currentLineText.includes(value)) {
+			addMark(editor,i);
+		}
+	}
+
+	
+}
+
+
+
 function activate(context) {
 	const provider = new DiredProvider();
 	const providerRegistration = vscode.workspace.registerTextDocumentContentProvider("dired", provider);
@@ -684,6 +712,8 @@ function activate(context) {
 		["diredToggleMark", () => diredToggleMark(provider)],
 		["diredInvertMarks", () => diredInvertMarks(provider)],
 		["diredUnmarkAll", () => removeAllMarks()],
+		["diredMarkByPartialName", () => diredMarkByPartialName()],
+		
 	];
 	commands.forEach((item) => {
 		const registered = vscode.commands.registerCommand(`extension.${item[0]}`, item[1]);

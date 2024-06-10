@@ -7,7 +7,7 @@ const controlsHelp = {
 			["m", "toggle mark"],
 			["t", "toggle all marks"],
 			["U", "unmark all"],
-			// ["*.", "mark by file extension (NOT YET IMPLEMENTED)"],
+			["s", "mark by partial filename"],
 		],
 		[
 			["Enter/o", "Open file / view directory"],
