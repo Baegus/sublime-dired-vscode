@@ -7,6 +7,10 @@ let currentDirectory = false;
 let lastWorkingDirectory = false;
 let lastFileLineNumber = 2; // On which line the last file is located
 
+/**
+ * Create the content of the current Dired view text buffer
+ * @param {boolean} renaming - if true, Rename mode is on
+ */
 const getCurrentFileContent = (renaming=false) => {
 	if (!currentDirectory) {
 		return "No directory selected.";
@@ -65,6 +69,7 @@ const isRenameModeEnabled = () => {
 
 /**
  * Enter Rename mode
+ * @param {vscode.TextDocumentContentProvider} provider
  */
 const enterRenameMode = async (provider = null) => {
 	if (isRenameModeEnabled()) return;
@@ -75,6 +80,7 @@ const enterRenameMode = async (provider = null) => {
 
 /**
  * Cancel edits and exit Rename mode
+ * @param {vscode.TextDocumentContentProvider} provider
  */
 const diredRenameCancel = async (provider = null) => {
 	await setRenameMode(false);
@@ -85,6 +91,7 @@ const diredRenameCancel = async (provider = null) => {
 
 /**
  * Show the rename buffer for editing
+ * @param {vscode.TextDocumentContentProvider} provider
  */
 const showRenameBuffer = async (provider = null) => {
 	const content = getCurrentFileContent(true);
@@ -127,6 +134,7 @@ const tryReadingDirectory = (dir) => {
 
 /**
  * Update the actual files and directories based on the changes made in the rename buffer
+ * @param {vscode.TextDocumentContentProvider} provider
  */
 const applyRenameChanges = async (provider = null) => {
 	const editor = vscode.window.activeTextEditor;
@@ -191,6 +199,7 @@ class DiredProvider {
 
 /**
  * Show contents of the current directory as a read-only text buffer.
+ * @param {vscode.TextDocumentContentProvider} provider
  */
 const showCurrentDirectory = async (provider = null) => {
 	if (!currentDirectory) return;
@@ -231,6 +240,7 @@ const showCurrentDirectory = async (provider = null) => {
 
 /**
  * Go up a directory, if possible.
+ * @param {vscode.TextDocumentContentProvider} provider
  */
 const diredUp = async (provider) => {
 	if (!currentDirectory) return;
@@ -251,6 +261,7 @@ const diredUp = async (provider) => {
 
 /**
  * Opens a directory selection dialog, then opens the selected directory as a dired buffer.
+ * @param {vscode.TextDocumentContentProvider} provider
  */
 const diredBuffer = async (provider) => {
 	const uri = await vscode.window.showOpenDialog({
@@ -269,6 +280,7 @@ const diredBuffer = async (provider) => {
 
 /**
  * Refreshes the current directory listing (when files changed outside of the editor)
+ * @param {vscode.TextDocumentContentProvider} provider
  */
 const diredRefresh = async (provider) => {
 	await showCurrentDirectory(provider);
@@ -300,6 +312,7 @@ const isLineFileOrDir = (lineNumber) => {
 
 /**
  * Opens the file/directory based on the current cursor position.
+ * @param {vscode.TextDocumentContentProvider} provider
  */
 const diredSelect = async (provider) => {
 	const editor = vscode.window.activeTextEditor;
@@ -325,6 +338,7 @@ const diredSelect = async (provider) => {
 
 /**
  * Deletes a single file/directory based on the current cursor position.
+ * @param {vscode.TextDocumentContentProvider} provider
  */
 const diredDelete = async (provider) => {
 	const editor = vscode.window.activeTextEditor;
@@ -395,6 +409,7 @@ const createFile = (filePath) => {
 
 /**
  * Show an input box to enter the name(s) of directories to create
+ * @param {vscode.TextDocumentContentProvider} provider
  */
 const diredCreateDirectory = async (provider = null) => {
 	const value = await vscode.window.showInputBox({ prompt: "Enter directory name, you can use \\ or / to create structures" });
@@ -410,6 +425,7 @@ const diredCreateDirectory = async (provider = null) => {
 
 /**
  * Show an input box to enter the name(s) of directories and/or a filename to create
+ * @param {vscode.TextDocumentContentProvider} provider
  */
 const diredCreateFile = async (provider = null) => {
 	const value = await vscode.window.showInputBox({ prompt: "Enter file name, you can use \\ or / to create structures" });
@@ -426,6 +442,7 @@ const diredCreateFile = async (provider = null) => {
 
 /**
  * Moves the cursor by n items forwards or backwards
+ * @param {vscode.TextDocumentContentProvider} provider
  * @param {int} direction - how many items forwards should we move, may be negative
  */
 const moveCursorTo = (provider = null, direction = 1) => {
@@ -449,6 +466,7 @@ const moveCursorTo = (provider = null, direction = 1) => {
 
 /**
  * Show an input box to enter the name(s) of directory / file to move the cursor to.
+ * @param {vscode.TextDocumentContentProvider} provider
  */
 const moveCursorToName = async (provider = null) => {
 	const editor = vscode.window.activeTextEditor;
@@ -480,6 +498,7 @@ let selectionChangeListener = null;
 /**
  * Shows a second editor view alongside the current one and previews (opens) the file 
  * on the cursor position.
+ * @param {vscode.TextDocumentContentProvider} provider
 */
 const toggleDiredPreviewMode = async (provider = null) => {
 	const editor = vscode.window.activeTextEditor;
@@ -582,6 +601,7 @@ const removeMark = async (editor, lineNumber) => {
 
 /**
  * The command to (un)mark the line with the cursor on
+ * @param {vscode.TextDocumentContentProvider} provider
 */
 const diredToggleMark = async (provider = null) => {
 	const editor = vscode.window.activeTextEditor;
@@ -599,8 +619,6 @@ const diredToggleMark = async (provider = null) => {
 	}
 
 	addMark(editor,lineNumber);
-	
-	
 }
 
 
