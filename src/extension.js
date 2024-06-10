@@ -380,6 +380,8 @@ const diredDelete = async (provider) => {
 
 	const pathsToDelete = getPathsOfSelectedEntries();
 
+	if (pathsToDelete.length === 0) return;
+
 	const dirCount = pathsToDelete.filter(fullPath => fullPath.endsWith(path.sep)).length;
 	const fileCount = pathsToDelete.length - dirCount;
 
