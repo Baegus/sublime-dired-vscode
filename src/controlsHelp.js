@@ -19,7 +19,7 @@ const controlsHelp = {
 		],
 		[
 			["u", "up to parent directory"],
-			// ["g", "goto directory (NOT YET IMPLEMENTED)"],
+			["g", "go to directory"],
 			["p", "move to previous file"],
 			["n", "move to next file"],
 			["rv", "refresh view"],

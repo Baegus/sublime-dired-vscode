@@ -267,12 +267,18 @@ const diredUp = async (provider) => {
  * Opens a directory selection dialog, then opens the selected directory as a dired buffer.
  * @param {vscode.TextDocumentContentProvider} provider
  */
-const diredBuffer = async (provider) => {
-	const uri = await vscode.window.showOpenDialog({
+const diredBuffer = async (provider, defaultURI=null) => {
+	const config = {
 		canSelectFolders: true,
 		canSelectFiles: false,
 		canSelectMany: false
-	});
+	};
+
+	if (defaultURI && currentDirectory) {
+		config.uri = vscode.Uri.file(currentDirectory)
+	}
+	
+	const uri = await vscode.window.showOpenDialog(config);
 
 	if (!uri || uri.length === 0) {
 		return;
@@ -419,7 +425,7 @@ const diredDelete = async (provider) => {
 }
 
 /**
- * Moves selected files/directories to specified location from a file browser
+ * Moves selected files/directories to a specified location from a file browser
  * @param {vscode.TextDocumentContentProvider} provider
  */
 const diredMove = async (provider) => {
@@ -768,6 +774,10 @@ const diredMarkByPartialName = async () => {
 }
 
 
+const diredGoto = (provider) => {
+	diredBuffer(provider, currentDirectory);
+}
+
 
 function activate(context) {
 	const provider = new DiredProvider();
@@ -795,6 +805,7 @@ function activate(context) {
 		["diredInvertMarks", () => diredInvertMarks(provider)],
 		["diredUnmarkAll", () => removeAllMarks()],
 		["diredMarkByPartialName", () => diredMarkByPartialName()],
+		["diredGoto", () => diredGoto(provider)],
 		
 	];
 	commands.forEach((item) => {

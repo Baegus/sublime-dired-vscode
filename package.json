@@ -181,19 +181,6 @@
 				"when": "editorTextFocus && editorLangId == 'dired' && !config.dired.renameMode"
 			},
 			{
-				"key": "a b",
-				"command": "extension.diredAdd",
-				"args": {
-					"target": "bookmark"
-				},
-				"when": "editorTextFocus && editorLangId == 'dired' && !config.dired.renameMode"
-			},
-			{
-				"key": "r b",
-				"command": "extension.diredRemoveBookmark",
-				"when": "editorTextFocus && editorLangId == 'dired' && !config.dired.renameMode"
-			},
-			{
 				"key": "shift+p",
 				"command": "extension.diredPreview",
 				"when": "editorTextFocus && editorLangId == 'dired' && !config.dired.renameMode"
