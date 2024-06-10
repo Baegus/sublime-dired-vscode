@@ -3,12 +3,12 @@ const isMacOS = os.platform() === "darwin";
 
 const controlsHelp = {
 	default: [
-		// [
-			// ["m", "toggle mark (NOT YET IMPLEMENTED)"],
+		[
+			["m", "toggle mark"],
 			// ["t", "toggle all marks (NOT YET IMPLEMENTED)"],
 			// ["U", "unmark all (NOT YET IMPLEMENTED)"],
 			// ["*.", "mark by file extension (NOT YET IMPLEMENTED)"],
-		// ],
+		],
 		[
 			["Enter/o", "Open file / view directory"],
 			["R", "rename"],

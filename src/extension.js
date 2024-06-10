@@ -542,6 +542,68 @@ const updatePreview = async (editor, preserveFocus = false) => {
 	await vscode.window.showTextDocument(diredEditor.document, { viewColumn: diredEditor.viewColumn, preserveFocus: true });
 }
 
+let markedLines = {}; // An object to store marked lines and their CSS decorations
+
+/**
+ * Add a given line number to makredLines and set its decoration
+ * @param {vscode.Editor} editor
+ * @param {int} lineNumber - the line number to mark
+*/
+const addMark = async (editor, lineNumber) => {
+	if (!editor || !lineNumber) return;
+
+	const range = editor.document.lineAt(lineNumber).range;
+
+	const decorationType = vscode.window.createTextEditorDecorationType({
+		textDecoration: "underline",
+		outline: "1px solid yellow",
+	});
+		
+	editor.setDecorations(decorationType, [range]);
+	markedLines[lineNumber] = decorationType;
+
+}
+
+/**
+ * Remove a given line number from makredLines and reset its decoration
+ * @param {vscode.Editor} editor
+ * @param {int} lineNumber - the line number to unmark
+*/
+const removeMark = async (editor, lineNumber) => {
+	if (!editor || !lineNumber) return;
+
+	const originalDecoration = markedLines[lineNumber];
+
+	if (!originalDecoration) return;
+
+	originalDecoration.dispose();
+	delete markedLines[lineNumber];
+}
+
+/**
+ * The command to (un)mark the line with the cursor on
+*/
+const diredToggleMark = async (provider = null) => {
+	const editor = vscode.window.activeTextEditor;
+	if (!editor) {
+		return;
+	}
+
+	const lineNumber = editor.selection.active.line;
+	
+	if (!isLineFileOrDir(lineNumber)) return;
+
+	if (markedLines[lineNumber]) {
+		removeMark(editor,lineNumber);
+		return;
+	}
+
+	addMark(editor,lineNumber);
+	
+	
+}
+
+
 function activate(context) {
 	const provider = new DiredProvider();
 	const providerRegistration = vscode.workspace.registerTextDocumentContentProvider("dired", provider);
@@ -551,7 +613,6 @@ function activate(context) {
 	const commands = [
 		["diredBuffer", () => diredBuffer(provider)],
 		["diredRefresh", () => diredRefresh(provider)],
-		["diredMark", diredMark],
 		["diredSelect", () => diredSelect(provider)],
 		["diredUp", () => diredUp(provider)],
 		["diredRename", () => enterRenameMode(provider)],
@@ -564,6 +625,7 @@ function activate(context) {
 		["diredNext", () => moveCursorTo(provider, 1)],
 		["diredJumpToName", () => moveCursorToName(provider)],
 		["diredPreview", () => toggleDiredPreviewMode(provider)],
+		["diredToggleMark", () => diredToggleMark(provider)],
 	];
 	commands.forEach((item) => {
 		const registered = vscode.commands.registerCommand(`extension.${item[0]}`, item[1]);

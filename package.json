@@ -109,28 +109,17 @@
 			},
 			{
 				"key": "m",
-				"command": "extension.diredMark",
-				"args": {
-					"mark": "toggle"
-				},
+				"command": "extension.diredToggleMark",
 				"when": "editorTextFocus && editorLangId == 'dired' && !config.dired.renameMode"
 			},
 			{
 				"key": "shift+u",
-				"command": "extension.diredMark",
-				"args": {
-					"mark": false,
-					"markall": true
-				},
+				"command": "extension.diredUnmarkAll",
 				"when": "editorTextFocus && editorLangId == 'dired' && !config.dired.renameMode"
 			},
 			{
 				"key": "t",
-				"command": "extension.diredMark",
-				"args": {
-					"mark": "toggle",
-					"markall": true
-				},
+				"command": "extension.diredInvertMarks",
 				"when": "editorTextFocus && editorLangId == 'dired' && !config.dired.renameMode"
 			},
 			{
