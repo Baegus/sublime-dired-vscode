@@ -710,16 +710,17 @@ const diredToggleMark = async (provider = null) => {
 		return;
 	}
 
-	const lineNumber = editor.selection.active.line;
+	const selections = editor.selections;
+	selections.forEach(selection => {
+		const lineNumber = selection.active.line;
+		if (!isLineFileOrDir(lineNumber)) return;
 	
-	if (!isLineFileOrDir(lineNumber)) return;
-
-	if (markedLines[lineNumber]) {
-		removeMark(editor,lineNumber);
-		return;
-	}
-
-	addMark(editor,lineNumber);
+		if (markedLines[lineNumber]) {
+			removeMark(editor,lineNumber);
+			return;
+		}
+		addMark(editor,lineNumber);
+	});
 }
 
 /**
