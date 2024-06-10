@@ -204,6 +204,8 @@ class DiredProvider {
 const showCurrentDirectory = async (provider = null) => {
 	if (!currentDirectory) return;
 
+	removeAllMarks();
+
 	const uri = vscode.Uri.parse("dired://authority/dired");
 	const document = await vscode.workspace.openTextDocument(uri);
 
@@ -286,7 +288,6 @@ const diredBuffer = async (provider) => {
  */
 const diredRefresh = async (provider) => {
 	await showCurrentDirectory(provider);
-	removeAllMarks();
 }
 
 /**
@@ -342,35 +343,73 @@ const diredSelect = async (provider) => {
 }
 
 /**
- * Deletes a single file/directory based on the current cursor position.
+ * Returns all marked items. If there are none, returns the item on cursor's position
+ * @returns {array} - full paths of selected entries
+ */
+const getPathsOfSelectedEntries = () => {
+	const editor = vscode.window.activeTextEditor;
+	if (!editor) return [];
+
+	const paths = [];
+	const fullPathFromLineNumber = (lineNumber) => {
+		lineNumber = parseInt(lineNumber);
+		return path.join(currentDirectory, editor.document.lineAt(lineNumber).text);
+	}
+
+	for (const lineNumber in markedLines) {
+		paths.push(fullPathFromLineNumber(lineNumber));
+	}
+
+	if (paths.length === 0) {
+		// No marked lines, select the item on cursor's position:
+		const currentLineNumber = editor.selection.active.line;
+		if (!isLineFileOrDir(currentLineNumber)) return paths;
+		paths.push(fullPathFromLineNumber(currentLineNumber));
+	}
+
+	return paths;
+}
+
+/**
+ * Deletes selected files/directories
  * @param {vscode.TextDocumentContentProvider} provider
  */
 const diredDelete = async (provider) => {
 	const editor = vscode.window.activeTextEditor;
 	if (!editor) return;
 
-	const currentLineNumber = editor.selection.active.line;
-	if (!isLineFileOrDir(currentLineNumber)) return;
+	const pathsToDelete = getPathsOfSelectedEntries();
 
-	const currentLine = editor.document.lineAt(currentLineNumber).text;
-	const fullPath = path.join(currentDirectory, currentLine);
-	const isDirectory = currentLine.endsWith(path.sep);
-	const typeString = isDirectory ? "directory" : "file";
+	const dirCount = pathsToDelete.filter(fullPath => fullPath.endsWith(path.sep)).length;
+	const fileCount = pathsToDelete.length - dirCount;
+
+	const prompts = [];
+	if (dirCount > 0) {
+		prompts.push(`${dirCount} ${dirCount > 1 ? "directories" : "directory"}`);
+	}
+	if (fileCount > 0) {
+		prompts.push(`${fileCount} ${fileCount > 1 ? "files" : "file"}`);
+	}
+	const typeString = prompts.join(" and ");
+
 	const confirmButton = "Confirm delete";
 	
 	const answer = await vscode.window.showInformationMessage(
-		`Delete ${typeString} ${currentLine}?`,
+		`Delete ${typeString}?`,
 		{ modal: true },
 		{ title: confirmButton },
 	);
 
 	if (!answer) return;
 	if (answer.title !== confirmButton) return;
-	if (isDirectory)  {
-		fs.rmSync(fullPath, { recursive: true, force: true })
-	} else {
-		fs.unlinkSync(fullPath);
-	}
+
+	pathsToDelete.forEach((fullPath) => {
+		if (fullPath.endsWith(path.sep))  {
+			fs.rmSync(fullPath, { recursive: true, force: true })
+		} else {
+			fs.unlinkSync(fullPath);
+		}
+	});
 	await showCurrentDirectory(provider);
 }
 
@@ -682,8 +721,6 @@ const diredMarkByPartialName = async () => {
 			addMark(editor,i);
 		}
 	}
-
-	
 }
 
 
