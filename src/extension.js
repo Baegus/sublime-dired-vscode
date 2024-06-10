@@ -538,7 +538,7 @@ const diredCreateFile = async (provider = null) => {
  * @param {vscode.TextDocumentContentProvider} provider
  * @param {int} direction - how many items forwards should we move, may be negative
  */
-const moveCursorTo = (provider = null, direction = 1) => {
+const moveCursorBy = (provider = null, direction = 1) => {
 	const editor = vscode.window.activeTextEditor;
 	if (!editor) return;
 
@@ -797,8 +797,8 @@ function activate(context) {
 		["diredMove", () => diredMove(provider)],
 		["diredCreateFile", () => diredCreateFile(provider)],
 		["diredCreateDirectory", () => diredCreateDirectory(provider)],
-		["diredPrev", () => moveCursorTo(provider, -1)],
-		["diredNext", () => moveCursorTo(provider, 1)],
+		["diredPrev", () => moveCursorBy(provider, -1)],
+		["diredNext", () => moveCursorBy(provider, 1)],
 		["diredJumpToName", () => moveCursorToName(provider)],
 		["diredPreview", () => toggleDiredPreviewMode(provider)],
 		["diredToggleMark", () => diredToggleMark(provider)],
