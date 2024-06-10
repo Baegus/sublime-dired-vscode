@@ -5,8 +5,8 @@ const controlsHelp = {
 	default: [
 		[
 			["m", "toggle mark"],
-			// ["t", "toggle all marks (NOT YET IMPLEMENTED)"],
-			// ["U", "unmark all (NOT YET IMPLEMENTED)"],
+			["t", "toggle all marks"],
+			["U", "unmark all"],
 			// ["*.", "mark by file extension (NOT YET IMPLEMENTED)"],
 		],
 		[

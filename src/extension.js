@@ -245,6 +245,8 @@ const showCurrentDirectory = async (provider = null) => {
 const diredUp = async (provider) => {
 	if (!currentDirectory) return;
 
+	removeAllMarks();
+
 	const parentDir = path.resolve(currentDirectory, "..");
 	if (parentDir === currentDirectory) {
 		vscode.window.showInformationMessage("You are in the root directory.");
@@ -284,6 +286,7 @@ const diredBuffer = async (provider) => {
  */
 const diredRefresh = async (provider) => {
 	await showCurrentDirectory(provider);
+	removeAllMarks();
 }
 
 /**
@@ -317,6 +320,8 @@ const isLineFileOrDir = (lineNumber) => {
 const diredSelect = async (provider) => {
 	const editor = vscode.window.activeTextEditor;
 	if (!editor) return;
+
+	removeAllMarks();
 
 	const currentLineNumber = editor.selection.active.line;
 	if (!isLineFileOrDir(currentLineNumber)) return;
@@ -584,6 +589,20 @@ const addMark = async (editor, lineNumber) => {
 }
 
 /**
+ * Removes all marked items
+*/
+const removeAllMarks = async () => {
+	const editor = vscode.window.activeTextEditor;
+	if (!editor) {
+		return;
+	}
+
+	for (const lineNumber in markedLines) {
+		removeMark(editor, lineNumber);
+	}
+}
+
+/**
  * Remove a given line number from makredLines and reset its decoration
  * @param {vscode.Editor} editor
  * @param {int} lineNumber - the line number to unmark
@@ -621,6 +640,25 @@ const diredToggleMark = async (provider = null) => {
 	addMark(editor,lineNumber);
 }
 
+/**
+ * Mark unmarked items, unmark marked items
+ * @param {vscode.TextDocumentContentProvider} provider
+*/
+const diredInvertMarks = async (provider = null) => {
+	const editor = vscode.window.activeTextEditor;
+	if (!editor) {
+		return;
+	}
+
+	for (let i=2;i<=lastFileLineNumber;i++) {
+		if (markedLines[i]) {
+			removeMark(editor, i);
+		} else {
+			addMark(editor, i);
+		}
+	}
+}
+
 
 function activate(context) {
 	const provider = new DiredProvider();
@@ -644,6 +682,8 @@ function activate(context) {
 		["diredJumpToName", () => moveCursorToName(provider)],
 		["diredPreview", () => toggleDiredPreviewMode(provider)],
 		["diredToggleMark", () => diredToggleMark(provider)],
+		["diredInvertMarks", () => diredInvertMarks(provider)],
+		["diredUnmarkAll", () => removeAllMarks()],
 	];
 	commands.forEach((item) => {
 		const registered = vscode.commands.registerCommand(`extension.${item[0]}`, item[1]);
@@ -651,6 +691,7 @@ function activate(context) {
 	});
 
 	diredRenameCancel(provider); // Make sure we're not in Rename mode by default
+	removeAllMarks();
 }
 
 exports.activate = activate;
