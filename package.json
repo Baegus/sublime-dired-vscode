@@ -163,16 +163,13 @@
 				"when": "editorTextFocus && editorLangId == 'dired' && !config.dired.renameMode"
 			},
 			{
-				"key": "a p",
-				"command": "extension.diredAdd",
-				"args": {
-					"target": "project"
-				},
+				"key": "a w",
+				"command": "extension.diredAddToWorkspace",
 				"when": "editorTextFocus && editorLangId == 'dired' && !config.dired.renameMode"
 			},
 			{
-				"key": "r p",
-				"command": "extension.diredRemoveFromProject",
+				"key": "r w",
+				"command": "extension.diredRemoveFromWorkspace",
 				"when": "editorTextFocus && editorLangId == 'dired' && !config.dired.renameMode"
 			},
 			{

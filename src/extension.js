@@ -776,12 +776,6 @@ const addToWorkspace = (fullPath) => {
 		null,
 		{ uri: uri }
 	);
-
-	if (!vscode.workspace.workspaceFolders || !vscode.workspace.workspaceFolders.find(folder => folder.uri.fsPath === fullPath)) {
-		vscode.window.showErrorMessage(`Failed to add folder ${fullPath} to the workspace`);
-	} else {
-		vscode.window.showInformationMessage(`Folder ${fullPath} added to the workspace`);
-	}
 }
 
 const diredAddToWorkspace = async (provider) => {
@@ -793,7 +787,7 @@ const diredAddToWorkspace = async (provider) => {
 		placeHolder: "Select what to add to the current workspace",
 		canPickMany: false,
 	});
-	if (options.indexOf(selectedOption) === 1) {
+	if (selectedOption === options[1]) {
 		addToWorkspace(currentDirectory);
 		return;
 	}
@@ -803,12 +797,46 @@ const diredAddToWorkspace = async (provider) => {
 	});
 }
 
-const diredGoto = (provider) => {
-	diredBuffer(provider, currentDirectory);
+const removeFromWorkspace = (fullPath) => {
+	const uri = vscode.Uri.file(fullPath);
+	const existingFolder = vscode.workspace.workspaceFolders
+		? vscode.workspace.workspaceFolders.find(folder => folder.uri.fsPath === fullPath)
+		: null;
+
+	if (!existingFolder) {
+		vscode.window.showInformationMessage(`Folder ${fullPath} is not in the workspace`);
+		return;
+	}
+
+	const index = vscode.workspace.workspaceFolders.indexOf(existingFolder);
+	vscode.workspace.updateWorkspaceFolders(index, 1);
 }
 
 
+const diredRemoveFromWorkspace = async (provider) => {
+	const options = [
+		"Remove the selected files / directories",
+		"Remove the currently open directory"
+	];
+	const selectedOption = await vscode.window.showQuickPick(options, {
+		placeHolder: "Select what to remove from the current workspace",
+		canPickMany: false,
+	});
 
+	if (selectedOption === options[1]) {
+		removeFromWorkspace(currentDirectory);
+		return;
+	}
+
+	const entries = getPathsOfSelectedEntries();
+	entries.forEach((entry) => {
+		removeFromWorkspace(entry);
+	});
+}
+
+const diredGoto = (provider) => {
+	diredBuffer(provider, currentDirectory);
+}
 
 
 function activate(context) {
@@ -838,6 +866,7 @@ function activate(context) {
 		["diredUnmarkAll", () => removeAllMarks()],
 		["diredMarkByPartialName", () => diredMarkByPartialName()],
 		["diredAddToWorkspace", () => diredAddToWorkspace(provider)],
+		["diredRemoveFromWorkspace", () => diredRemoveFromWorkspace(provider)],
 		["diredGoto", () => diredGoto(provider)],
 		
 	];
