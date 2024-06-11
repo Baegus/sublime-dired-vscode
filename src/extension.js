@@ -2,7 +2,7 @@ const vscode = require("vscode");
 const fs = require("fs");
 const os = require("os");
 const path = require("path");
-const { controlsHelp, controlsHelpStrings } = require("./controlsHelp");
+const { controlsHelpStrings } = require("./controlsHelp");
 
 let currentDirectory = false;
 let lastWorkingDirectory = false;
@@ -242,7 +242,6 @@ const showCurrentDirectory = async (provider = null) => {
 	const uri = vscode.Uri.parse("dired://authority/dired");
 	const document = await vscode.workspace.openTextDocument(uri);
 
-	const renameModeOn = isRenameModeEnabled(); // Check if Rename mode is enabled
 	const editor = await vscode.window.showTextDocument(document, { preview: false });
 
 	await vscode.languages.setTextDocumentLanguage(document, "dired");
@@ -362,7 +361,6 @@ const diredSelect = async (provider) => {
 	}
 	// Current line is a file, open it in VSCode:
 	const filePath = path.join(currentDirectory, currentLine);
-	const fileExtension = path.extname(currentLine).toLowerCase();
 
 	const fileUri = vscode.Uri.file(filePath);
 	await vscode.commands.executeCommand('vscode.open', fileUri);
@@ -622,7 +620,6 @@ const toggleDiredPreviewMode = async (provider = null) => {
 	if (previewEnabled) {
 		// Disable preview mode by closing the preview editor and removing the listener
 		if (previewEditor) {
-			const previewColumn = previewEditor.viewColumn;
 			await vscode.commands.executeCommand("workbench.action.closeEditorsInOtherGroups");
 			previewEditor = null;
 		}
@@ -663,7 +660,6 @@ const updatePreview = async (editor, preserveFocus = false) => {
 
 	// Current line is a file, open it in preview mode:
 	const filePath = path.join(currentDirectory, currentLine);
-	const fileExtension = path.extname(currentLine).toLowerCase();
 
 	const openEditorOptions = { preview: true, viewColumn: vscode.ViewColumn.Beside, preserveFocus: true };
 
@@ -843,7 +839,6 @@ const diredAddToWorkspace = async () => {
  * @param {string} fullPath - Full path of the removed directory (will get converted to a VSCode Uri)
 */
 const removeFromWorkspace = (fullPath) => {
-	const uri = vscode.Uri.file(fullPath);
 	const existingFolder = vscode.workspace.workspaceFolders
 		? vscode.workspace.workspaceFolders.find(folder => folder.uri.fsPath === fullPath)
 		: null;
