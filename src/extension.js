@@ -1,5 +1,6 @@
 const vscode = require("vscode");
 const fs = require("fs");
+const os = require("os");
 const path = require("path");
 const { controlsHelp, controlsHelpStrings } = require("./controlsHelp");
 
@@ -875,8 +876,10 @@ const diredGotoAnywhere = async (provider) => {
 		});
 	}
 
+	options.push(os.homedir());
+
 	options.push("Browse...");
-	
+
 	const selectedOption = await vscode.window.showQuickPick(options, {
 		placeHolder: "Select a directory to open...",
 		canPickMany: false,
