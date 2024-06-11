@@ -165,9 +165,33 @@ const applyRenameChanges = async (provider = null) => {
 
 	for (let i = 0; i < oldFiles.length; i++) {
 		if (oldFiles[i] === newFiles[i]) continue;
+		if (oldFiles[i].endsWith(path.sep) !== newFiles[i].endsWith(path.sep)) {
+			vscode.window.showWarningMessage("Filenames can't end with slashes.");
+			return;
+		}
+	}
+
+	// Use a temporary filename to handle renames
+	const tempFileSuffix = "_tempDiredRename";
+	const tempFilesMap = {};
+
+
+	for (let i = 0; i < oldFiles.length; i++) {
+		if (oldFiles[i] === newFiles[i]) continue;
 		const oldPath = path.join(currentDirectory, oldFiles[i]);
+		if (newFiles[i].endsWith(path.sep)) newFiles[i] = newFiles[i].slice(0,-1);
+		const tempPath = path.join(currentDirectory, newFiles[i] + tempFileSuffix);
+		tempFilesMap[newFiles[i]] = tempPath; // Store the temporary path for final renaming
+		console.log(`fs.renameSync(${oldPath}, ${tempPath});`);
+		console.log("tempFilesMap",tempFilesMap);
+		fs.renameSync(oldPath, tempPath);
+	}
+
+	for (let i = 0; i < newFiles.length; i++) {
+		if (oldFiles[i] === newFiles[i]) continue;
 		const newPath = path.join(currentDirectory, newFiles[i]);
-		fs.renameSync(oldPath, newPath);
+		const tempPath = tempFilesMap[newFiles[i]];
+		fs.renameSync(tempPath, newPath);
 	}
 
 	await setRenameMode(false);
