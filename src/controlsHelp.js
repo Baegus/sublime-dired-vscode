@@ -24,13 +24,11 @@ const controlsHelp = {
 			["n", "move to next file"],
 			["rv", "refresh view"],
 		],
-		// [
+		[
 			// ["B", "Goto Anywhere (goto any directory, bookmark or project dir) (NOT YET IMPLEMENTED)"],
-			// ["ab", "add to bookmarks (NOT YET IMPLEMENTED)"],
-			// ["ap", "add to project (NOT YET IMPLEMENTED)"],
-			// ["rb", "remove from bookmark (NOT YET IMPLEMENTED)"],
-			// ["ra", "remove from project (NOT YET IMPLEMENTED)"],
-		// ],
+			["aw", "add to workspace"],
+			["rw", "remove from workspace"],
+		],
 		[
 			["P", "toggle Preview mode on/off"],
 			["j", "jump to file/dir name"],

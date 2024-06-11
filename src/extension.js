@@ -277,7 +277,7 @@ const diredBuffer = async (provider, defaultURI=null) => {
 	if (defaultURI && currentDirectory) {
 		config.uri = vscode.Uri.file(currentDirectory)
 	}
-	
+
 	const uri = await vscode.window.showOpenDialog(config);
 
 	if (!uri || uri.length === 0) {
@@ -294,19 +294,6 @@ const diredBuffer = async (provider, defaultURI=null) => {
  */
 const diredRefresh = async (provider) => {
 	await showCurrentDirectory(provider);
-}
-
-/**
- * Marks the current file/directory as selected to allow multiple file operations.
- * NOT YET IMPLEMENTED.
- */
-const diredMark = async (args) => {
-	const editor = vscode.window.activeTextEditor;
-	if (!editor) return;
-
-	const currentLine = editor.document.lineAt(editor.selection.active.line);
-	console.log(currentLine.text);
-	return currentLine.text;
 }
 
 /**
@@ -773,10 +760,55 @@ const diredMarkByPartialName = async () => {
 	}
 }
 
+const addToWorkspace = (fullPath) => {
+	const uri = vscode.Uri.file(fullPath);
+	const existingFolder = vscode.workspace.workspaceFolders
+		? vscode.workspace.workspaceFolders.find(folder => folder.uri.fsPath === fullPath)
+		: null;
+
+	if (existingFolder) {
+		vscode.window.showInformationMessage(`Folder ${fullPath} is already in the workspace`);
+		return;
+	}
+	const currentWorkspaceFolders = vscode.workspace.workspaceFolders ? vscode.workspace.workspaceFolders.length : 0;
+	vscode.workspace.updateWorkspaceFolders(
+		currentWorkspaceFolders,
+		null,
+		{ uri: uri }
+	);
+
+	if (!vscode.workspace.workspaceFolders || !vscode.workspace.workspaceFolders.find(folder => folder.uri.fsPath === fullPath)) {
+		vscode.window.showErrorMessage(`Failed to add folder ${fullPath} to the workspace`);
+	} else {
+		vscode.window.showInformationMessage(`Folder ${fullPath} added to the workspace`);
+	}
+}
+
+const diredAddToWorkspace = async (provider) => {
+	const options = [
+		"Add the selected files / directories",
+		"Add the currently open directory"
+	];
+	const selectedOption = await vscode.window.showQuickPick(options, {
+		placeHolder: "Select what to add to the current workspace",
+		canPickMany: false,
+	});
+	if (options.indexOf(selectedOption) === 1) {
+		addToWorkspace(currentDirectory);
+		return;
+	}
+	const entries = getPathsOfSelectedEntries();
+	entries.forEach((entry) => {
+		addToWorkspace(entry);
+	});
+}
 
 const diredGoto = (provider) => {
 	diredBuffer(provider, currentDirectory);
 }
+
+
+
 
 
 function activate(context) {
@@ -805,6 +837,7 @@ function activate(context) {
 		["diredInvertMarks", () => diredInvertMarks(provider)],
 		["diredUnmarkAll", () => removeAllMarks()],
 		["diredMarkByPartialName", () => diredMarkByPartialName()],
+		["diredAddToWorkspace", () => diredAddToWorkspace(provider)],
 		["diredGoto", () => diredGoto(provider)],
 		
 	];
