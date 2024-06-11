@@ -147,6 +147,11 @@
 				"when": "editorTextFocus && editorLangId == 'dired' && config.dired.renameMode"
 			},
 			{
+				"key": "cmd+enter",
+				"command": "extension.diredRenameCommit",
+				"when": "editorTextFocus && editorLangId == 'dired' && config.dired.renameMode"
+			},
+			{
 				"key": "shift+escape",
 				"command": "extension.diredRenameCancel",
 				"when": "editorTextFocus && editorLangId == 'dired' && config.dired.renameMode"
