@@ -25,7 +25,7 @@ const controlsHelp = {
 			["rv", "refresh view"],
 		],
 		[
-			// ["B", "Goto Anywhere (goto any directory, bookmark or project dir) (NOT YET IMPLEMENTED)"],
+			["B", "go to anywhere"],
 			["aw", "add to workspace"],
 			["rw", "remove from workspace"],
 		],

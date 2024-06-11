@@ -267,7 +267,7 @@ const diredUp = async (provider) => {
  * Opens a directory selection dialog, then opens the selected directory as a dired buffer.
  * @param {vscode.TextDocumentContentProvider} provider
  */
-const diredBuffer = async (provider, defaultURI=null) => {
+const diredBrowse = async (provider, defaultURI=null) => {
 	const config = {
 		canSelectFolders: true,
 		canSelectFiles: false,
@@ -760,6 +760,10 @@ const diredMarkByPartialName = async () => {
 	}
 }
 
+/**
+ * Adds a single path to the current workspace (or creates a new one, if no workspace is open)
+ * @param {string} fullPath - Full path of the added directory (will get converted to a VSCode Uri)
+*/
 const addToWorkspace = (fullPath) => {
 	const uri = vscode.Uri.file(fullPath);
 	const existingFolder = vscode.workspace.workspaceFolders
@@ -778,7 +782,11 @@ const addToWorkspace = (fullPath) => {
 	);
 }
 
-const diredAddToWorkspace = async (provider) => {
+/**
+ * Shows an input box to decide which directory will get added to the current workspace.
+ * The user can select the currently open directory or the selected/marked directories.
+*/
+const diredAddToWorkspace = async () => {
 	const options = [
 		"Add the selected files / directories",
 		"Add the currently open directory"
@@ -797,6 +805,10 @@ const diredAddToWorkspace = async (provider) => {
 	});
 }
 
+/**
+ * Removes a single path from the current workspace
+ * @param {string} fullPath - Full path of the removed directory (will get converted to a VSCode Uri)
+*/
 const removeFromWorkspace = (fullPath) => {
 	const uri = vscode.Uri.file(fullPath);
 	const existingFolder = vscode.workspace.workspaceFolders
@@ -812,8 +824,11 @@ const removeFromWorkspace = (fullPath) => {
 	vscode.workspace.updateWorkspaceFolders(index, 1);
 }
 
-
-const diredRemoveFromWorkspace = async (provider) => {
+/**
+ * Shows an input box to decide which directory will get removed from the current workspace.
+ * The user can select the currently open directory or the selected/marked directories.
+*/
+const diredRemoveFromWorkspace = async () => {
 	const options = [
 		"Remove the selected files / directories",
 		"Remove the currently open directory"
@@ -834,8 +849,48 @@ const diredRemoveFromWorkspace = async (provider) => {
 	});
 }
 
+
+/**
+ * Opens a file browser to change the currently opened directory.
+ * Always opens in the currently open directory.
+ * @param {vscode.TextDocumentContentProvider} provider
+*/
 const diredGoto = (provider) => {
-	diredBuffer(provider, currentDirectory);
+	diredBrowse(provider, currentDirectory);
+}
+
+
+/**
+ * Shows an input box to decide if Dired will open one of the project directories or open a file browser.
+ * @param {vscode.TextDocumentContentProvider} provider
+*/
+const diredGotoAnywhere = async (provider) => {
+	const options = [];
+	const workspaceFolders = vscode.workspace.workspaceFolders;
+
+	if (workspaceFolders) {
+		workspaceFolders.map(dir => {
+			options.push(dir.uri.fsPath);
+			return dir.uri.fsPath
+		});
+	}
+
+	options.push("Browse...");
+	
+	const selectedOption = await vscode.window.showQuickPick(options, {
+		placeHolder: "Select a directory to open...",
+		canPickMany: false,
+	});
+
+	if (!selectedOption) return;
+
+	if (selectedOption === options[options.length-1]) {
+		diredBrowse(provider);
+		return;
+	}
+
+	currentDirectory = selectedOption;
+	await showCurrentDirectory(provider);
 }
 
 
@@ -846,7 +901,7 @@ function activate(context) {
 	context.subscriptions.push(providerRegistration);
 
 	const commands = [
-		["diredBuffer", () => diredBuffer(provider)],
+		["diredBrowse", () => diredBrowse(provider)],
 		["diredRefresh", () => diredRefresh(provider)],
 		["diredSelect", () => diredSelect(provider)],
 		["diredUp", () => diredUp(provider)],
@@ -865,9 +920,11 @@ function activate(context) {
 		["diredInvertMarks", () => diredInvertMarks(provider)],
 		["diredUnmarkAll", () => removeAllMarks()],
 		["diredMarkByPartialName", () => diredMarkByPartialName()],
-		["diredAddToWorkspace", () => diredAddToWorkspace(provider)],
-		["diredRemoveFromWorkspace", () => diredRemoveFromWorkspace(provider)],
+		["diredAddToWorkspace", () => diredAddToWorkspace()],
+		["diredRemoveFromWorkspace", () => diredRemoveFromWorkspace()],
 		["diredGoto", () => diredGoto(provider)],
+		["diredGotoAnywhere", () => diredGotoAnywhere(provider)],
+
 		
 	];
 	commands.forEach((item) => {

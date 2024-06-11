@@ -27,12 +27,12 @@
 		},
 		"commands": [
 			{
-				"command": "extension.diredBuffer",
-				"title": "Open a Dired buffer"
+				"command": "extension.diredBrowse",
+				"title": "Dired - Browse..."
 			},
 			{
-				"command": "extension.toggleReadOnly",
-				"title": "Toggle Read-Only Mode"
+				"command": "extension.diredGotoAnywhere",
+				"title": "Dired - go to anywhere"
 			}
 		],
 		"languages": [
@@ -74,17 +74,11 @@
 			{
 				"key": "cmd+enter",
 				"command": "extension.diredSelect",
-				"args": {
-					"newView": true
-				},
 				"when": "editorTextFocus && editorLangId == 'dired' && !config.dired.renameMode"
 			},
 			{
 				"key": "ctrl+enter",
 				"command": "extension.diredSelect",
-				"args": {
-					"newView": true
-				},
 				"when": "editorTextFocus && editorLangId == 'dired' && !config.dired.renameMode"
 			},
 			{
