@@ -6,7 +6,9 @@ const { controlsHelp, controlsHelpStrings } = require("./controlsHelp");
 
 let currentDirectory = false;
 let lastWorkingDirectory = false;
-let lastFileLineNumber = 2; // On which line the last file is located
+let lastEntryLineNumber = 2; // On which line the last file is located
+
+const omitRegexes = []; // Parsed omitPatterns (filled in setupOmitPatterns())
 
 /**
  * Create the content of the current Dired view text buffer
@@ -17,33 +19,41 @@ const getCurrentFileContent = (renaming=false) => {
 		return "No directory selected.";
 	}
 
-	let files = tryReadingDirectory(currentDirectory);
-	if (!files && lastWorkingDirectory !== false) {
-		files = tryReadingDirectory(lastWorkingDirectory);
+	let entries = tryReadingDirectory(currentDirectory);
+	if (!entries && lastWorkingDirectory !== false) {
+		entries = tryReadingDirectory(lastWorkingDirectory);
 	}
 
 	let fileContent = `${renaming?"Renaming in ":""}${currentDirectory}${path.sep}\n\n`;
 
-	if (!files) {
+	if (!entries) {
 		fileContent += "Error reading from disk.";
 		return fileContent;
 	}
 
-	fileContent += files.map(file => {
-		const filePath = path.join(currentDirectory, file);
-		let text = file;
+	const entryArray = [];
+
+	entries.forEach((entry) => {
+		for(const omitRegex of omitRegexes) {
+			if (omitRegex.test(entry)) return;
+		}
+		const entryPath = path.join(currentDirectory, entry);
+		let text = entry;
 		try {
-			const stats = fs.statSync(filePath);
+			const stats = fs.statSync(entryPath);
 			if (stats.isDirectory()) {
 				text += path.sep;
 			}
 		} catch (err) {
-			return `${file} (access denied)`;
+			// console.log(`Access to ${entry} is denied`);
+			return `${entry} (access denied)`;
 		}
-		return text;
-	}).join("\n");
+		entryArray.push(text);
+	});
 
-	lastFileLineNumber = files.length + 1;
+	fileContent += entryArray.join("\n");
+
+	lastEntryLineNumber = entryArray.length + 1;
 
 	fileContent += "\n\n";
 	fileContent += controlsHelpStrings[renaming ? "rename" : "default"];
@@ -182,8 +192,6 @@ const applyRenameChanges = async (provider = null) => {
 		if (newFiles[i].endsWith(path.sep)) newFiles[i] = newFiles[i].slice(0,-1);
 		const tempPath = path.join(currentDirectory, newFiles[i] + tempFileSuffix);
 		tempFilesMap[newFiles[i]] = tempPath; // Store the temporary path for final renaming
-		console.log(`fs.renameSync(${oldPath}, ${tempPath});`);
-		console.log("tempFilesMap",tempFilesMap);
 		fs.renameSync(oldPath, tempPath);
 	}
 
@@ -328,7 +336,7 @@ const diredRefresh = async (provider) => {
  */
 const isLineFileOrDir = (lineNumber) => {
 	if (lineNumber < 2) return false;
-	if (lineNumber > lastFileLineNumber) return false;
+	if (lineNumber > lastEntryLineNumber) return false;
 	return true;
 }
 
@@ -560,7 +568,7 @@ const moveCursorBy = (provider = null, direction = 1) => {
 		if (targetLine < 2) {
 			targetLine = 2;
 		} else {
-			targetLine = lastFileLineNumber;
+			targetLine = lastEntryLineNumber;
 		}
 	}
 
@@ -579,7 +587,7 @@ const moveCursorToName = async (provider = null) => {
 
 	const document = editor.document;
 	const text = document.getText();
-	const lines = text.split("\n").slice(2,lastFileLineNumber+1);
+	const lines = text.split("\n").slice(2,lastEntryLineNumber+1);
 
 	const selectedValue = await vscode.window.showQuickPick(lines, {
 		placeHolder: "Enter file / directory name to move the cursor to",
@@ -751,7 +759,7 @@ const diredInvertMarks = async (provider = null) => {
 		return;
 	}
 
-	for (let i=2;i<=lastFileLineNumber;i++) {
+	for (let i=2;i<=lastEntryLineNumber;i++) {
 		if (markedLines[i]) {
 			removeMark(editor, i);
 		} else {
@@ -777,7 +785,7 @@ const diredMarkByPartialName = async () => {
 		return;
 	}
 
-	for(let i=2;i<=lastFileLineNumber;i++) {
+	for(let i=2;i<=lastEntryLineNumber;i++) {
 		const currentLineText = editor.document.lineAt(i).text;
 		if (currentLineText.includes(value)) {
 			addMark(editor,i);
@@ -920,6 +928,25 @@ const diredGotoAnywhere = async (provider) => {
 	await showCurrentDirectory(provider);
 }
 
+/**
+ * Parses omit patterns from the user's config.
+ * If the config entry doesn't exist, creates default ones for commonly hidden files (.DS_Store etc.)
+ * If a RegExp is invalid, throws a warning.
+*/
+const setupOmitPatterns = async () => {
+	const config = vscode.workspace.getConfiguration("dired");
+	const userOmitPatterns = config.get("omitPatterns");
+	userOmitPatterns.forEach((omitPattern) => {
+		try {
+			const patternRegExp = new RegExp(omitPattern);
+			omitRegexes.push(patternRegExp);
+		} catch (err) {
+			vscode.window.showWarningMessage(`Invalid RegExp pattern in omitPatterns config: ${omitPattern}`);
+			return;
+		}
+	});
+}
+
 
 function activate(context) {
 	const provider = new DiredProvider();
@@ -959,8 +986,9 @@ function activate(context) {
 		context.subscriptions.push(registered);
 	});
 
+	setupOmitPatterns(); // Parse user omitPatterns or create the default ones
 	diredRenameCancel(provider); // Make sure we're not in Rename mode by default
-	removeAllMarks();
+	removeAllMarks(); // Remove any leftover marks from previous sessions
 }
 
 exports.activate = activate;

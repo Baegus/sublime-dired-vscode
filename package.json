@@ -19,9 +19,19 @@
 			"title": "Dired Extension Configuration",
 			"properties": {
 				"dired.renameMode": {
+					"description": "Enable/Disable rename mode in Dired.",
 					"type": "boolean",
-					"default": false,
-					"description": "Enable/Disable rename mode in dired."
+					"default": false
+				},
+				"dired.omitPatterns": {
+					"description": "Files matching these RegExp patterns won't be shown in Dired.",
+					"type": "array",
+					"default": [
+						".DS_Store",
+						"thumbs.db",
+						"desktop.ini",
+						"^__MACOSX"
+					]
 				}
 			}
 		},
