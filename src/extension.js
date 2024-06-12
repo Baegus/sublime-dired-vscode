@@ -150,7 +150,7 @@ const updateRenameDecorations = (editor) => {
 	}
 
 	renameDecorations = vscode.window.createTextEditorDecorationType({
-		after: { margin: '0 0 0 3em', color: 'gray', fontStyle: 'italic' }
+		after: { margin: '0 0 0 3ch', color: 'gray', fontStyle: 'italic' }
 	});
 
 	const decorations = [];
