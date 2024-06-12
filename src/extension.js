@@ -4,17 +4,19 @@ const os = require("os");
 const path = require("path");
 const { controlsHelpStrings } = require("./controlsHelp");
 
-let currentDirectory = false;
-let lastWorkingDirectory = false;
+let currentDirectory = false; // Current working directory
+let lastWorkingDirectory = false; // The last successfully opened directory
 let lastEntryLineNumber = 2; // On which line the last file is located
 
 const omitRegexes = []; // Parsed omitPatterns (filled in setupOmitPatterns())
+
+let originalEntries = []; // Original entry names before renaming
 
 /**
  * Create the content of the current Dired view text buffer
  * @param {boolean} renaming - if true, Rename mode is on
  */
-const getCurrentFileContent = (renaming=false) => {
+const getCurrentFileContent = (renaming = false) => {
 	if (!currentDirectory) {
 		return "No directory selected.";
 	}
@@ -34,7 +36,7 @@ const getCurrentFileContent = (renaming=false) => {
 	const entryArray = [];
 
 	entries.forEach((entry) => {
-		for(const omitRegex of omitRegexes) {
+		for (const omitRegex of omitRegexes) {
 			if (omitRegex.test(entry)) return;
 		}
 		const entryPath = path.join(currentDirectory, entry);
@@ -46,12 +48,17 @@ const getCurrentFileContent = (renaming=false) => {
 			}
 		} catch (err) {
 			// console.log(`Access to ${entry} is denied`);
-			return `${entry} (access denied)`;
+			return;
 		}
 		entryArray.push(text);
 	});
 
 	fileContent += entryArray.join("\n");
+
+	// Store original entries
+	if (renaming) {
+		originalEntries = entryArray.slice();
+	}
 
 	lastEntryLineNumber = entryArray.length + 1;
 
@@ -59,7 +66,7 @@ const getCurrentFileContent = (renaming=false) => {
 	fileContent += controlsHelpStrings[renaming ? "rename" : "default"];
 
 	return fileContent;
-};
+}
 
 /**
  * Turn Rename mode on/off
@@ -118,13 +125,48 @@ const showRenameBuffer = async (provider = null) => {
 		provider.notifyContentChanged();
 	}
 
-	const moveCursorToFirstEntry = () => {
-		const range = editor.document.lineAt(2).range;
-		editor.selection = new vscode.Selection(range.start, range.start);
-		editor.revealRange(range);
-	}
-	moveCursorToFirstEntry();
+	// Add decorations to show original names
+	updateRenameDecorations(editor);
+
+	// Listen for changes in the text editor to update decorations dynamically
+	vscode.workspace.onDidChangeTextDocument(event => {
+		if (event.document === document) {
+			updateRenameDecorations(editor);
+		}
+	});
+
+	await moveCursorToFirstEntry();
 }
+
+let renameDecorations = null; // Decorations showing the original entry names while renaming
+/**
+ * Update the decorations in the rename buffer
+ * @param {vscode.TextEditor} editor
+ */
+const updateRenameDecorations = (editor) => {
+	if (renameDecorations) {
+		renameDecorations.dispose();
+	}
+
+	renameDecorations = vscode.window.createTextEditorDecorationType({
+		after: { margin: '0 0 0 3em', color: 'gray', fontStyle: 'italic' }
+	});
+
+	const decorations = [];
+	for (let i = 2; i <= lastEntryLineNumber; i++) {
+		const originalName = originalEntries[i - 2];
+		const lineText = editor.document.lineAt(i).text;
+		if (originalName && originalName !== lineText) {
+			decorations.push({
+				range: new vscode.Range(new vscode.Position(i, lineText.length), new vscode.Position(i, lineText.length)),
+				renderOptions: { after: { contentText: ` (${originalName})` } }
+			});
+		}
+	}
+
+	editor.setDecorations(renameDecorations, decorations);
+}
+
 
 /**
  * Try reading the desired directory. If reading fails, returns false.
@@ -176,7 +218,7 @@ const applyRenameChanges = async (provider = null) => {
 	for (let i = 0; i < oldFiles.length; i++) {
 		if (oldFiles[i] === newFiles[i]) continue;
 		if (oldFiles[i].endsWith(path.sep) !== newFiles[i].endsWith(path.sep)) {
-			vscode.window.showWarningMessage("Filenames can't end with slashes.");
+			vscode.window.showWarningMessage("Removing slashes from directories is not allowed. Filenames can't end with slashes.");
 			return;
 		}
 	}
@@ -256,16 +298,11 @@ const showCurrentDirectory = async (provider = null) => {
 		provider.notifyContentChanged();
 	}
 
-	const moveCursorToFirstEntry = () => {
-		const range = editor.document.lineAt(2).range;
-		editor.selection = new vscode.Selection(range.start, range.start);
-		editor.revealRange(range);
-	}
-	moveCursorToFirstEntry();
+	await moveCursorToFirstEntry();
 
-	const moveCursorOnChange = (e) => {
+	const moveCursorOnChange = async (e) => {
 		if (e.document.uri.toString() !== document.uri.toString()) return;
-		moveCursorToFirstEntry();
+		await moveCursorToFirstEntry();
 		vscode.workspace.onDidChangeTextDocument(moveCursorOnChangeDisposable.dispose);
 	};
 
@@ -571,6 +608,20 @@ const moveCursorBy = (provider = null, direction = 1) => {
 	}
 
 	const range = editor.document.lineAt(targetLine).range;
+	editor.selection = new vscode.Selection(range.start, range.start);
+	editor.revealRange(range);
+}
+
+/**
+ * Moves the cursor to the first file / directory
+ */
+const moveCursorToFirstEntry = async () => {
+	const editor = vscode.window.activeTextEditor;
+	if (!editor) {
+		return;
+	}
+
+	const range = editor.document.lineAt(2).range;
 	editor.selection = new vscode.Selection(range.start, range.start);
 	editor.revealRange(range);
 }
