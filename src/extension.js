@@ -304,7 +304,6 @@ class DiredPreviewProvider {
 	*/
 	provideTextDocumentContent(uri) {
 		if (!currentPreviewDirectory) return "";
-		console.log("currentPreviewDirectory",currentPreviewDirectory);
 		const entries = tryReadingDirectory(currentPreviewDirectory, true);
 		if (!entries) {
 			return "Cannot read this directory for previewing.";
