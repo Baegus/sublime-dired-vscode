@@ -91,6 +91,7 @@ const isRenameModeEnabled = () => {
  */
 const enterRenameMode = async (provider = null) => {
 	if (isRenameModeEnabled()) return;
+	removeAllMarks();
 	await setRenameMode(true);
 	await vscode.commands.executeCommand("workbench.action.revertAndCloseActiveEditor");
 	await showRenameBuffer(provider);
