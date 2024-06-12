@@ -134,7 +134,6 @@ const showRenameBuffer = async (provider = null) => {
 	// Listen for changes in the text editor to update decorations dynamically
 	if (renameDecorationListener) renameDecorationListener.dispose();
 	renameDecorationListener = vscode.workspace.onDidChangeTextDocument(event => {
-		console.log("listener");
 		if (event.document === document) {
 			updateRenameDecorations(editor);
 		}
