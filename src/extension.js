@@ -961,7 +961,7 @@ const removeFromWorkspace = (fullPath) => {
 const diredRemoveFromWorkspace = async () => {
 	const options = [
 		"Remove the selected files / directories",
-		"Remove the currently open directory"
+		"Remove the directory currently open in dired"
 	];
 	const selectedOption = await vscode.window.showQuickPick(options, {
 		placeHolder: "Select what to remove from the current workspace",
