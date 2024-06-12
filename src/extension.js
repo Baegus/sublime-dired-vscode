@@ -160,7 +160,7 @@ const updateRenameDecorations = (editor) => {
 		if (originalName && originalName !== lineText) {
 			decorations.push({
 				range: new vscode.Range(new vscode.Position(i, lineText.length), new vscode.Position(i, lineText.length)),
-				renderOptions: { after: { contentText: ` (${originalName})` } }
+				renderOptions: { after: { contentText: ` ← ${originalName}` } }
 			});
 		}
 	}
