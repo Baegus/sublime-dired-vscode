@@ -10,6 +10,36 @@ let lastEntryLineNumber = 2; // On which line the last file is located
 
 const omitRegexes = []; // Parsed omitPatterns (filled in setupOmitPatterns())
 
+/**
+ * Gets the final entry array of files and directories.
+ * Skips ones matching any of the omitPatterns regexes.
+ * Skips unreadable directories.
+ * Adds path separator to directories.
+ * @param {array} entries - entries to process (NOT full paths)
+ * @param {string} dir - directory path (current or preview directory)
+ */
+const getFilesAndDirectories = (entries,dir=currentDirectory) => {
+	const entryArray = [];
+	entries.forEach((entry) => {
+		for (const omitRegex of omitRegexes) {
+			if (omitRegex.test(entry)) return;
+		}
+		const entryPath = path.join(dir, entry);
+		let text = entry;
+		try {
+			const stats = fs.statSync(entryPath);
+			if (stats.isDirectory()) {
+				text += path.sep;
+			}
+		} catch (err) {
+			// console.log(`Access to ${entry} is denied`);
+			return;
+		}
+		entryArray.push(text);
+	});
+	return entryArray;
+}
+
 let originalEntries = []; // Original entry names before renaming
 
 /**
@@ -33,25 +63,7 @@ const getCurrentFileContent = (renaming = false) => {
 		return fileContent;
 	}
 
-	const entryArray = [];
-
-	entries.forEach((entry) => {
-		for (const omitRegex of omitRegexes) {
-			if (omitRegex.test(entry)) return;
-		}
-		const entryPath = path.join(currentDirectory, entry);
-		let text = entry;
-		try {
-			const stats = fs.statSync(entryPath);
-			if (stats.isDirectory()) {
-				text += path.sep;
-			}
-		} catch (err) {
-			// console.log(`Access to ${entry} is denied`);
-			return;
-		}
-		entryArray.push(text);
-	});
+	const entryArray = getFilesAndDirectories(entries);
 
 	fileContent += entryArray.join("\n");
 
@@ -176,7 +188,7 @@ const updateRenameDecorations = (editor) => {
  * @param {string} dir - Path of the directory to read.
  * @returns {array} - Array of file and directory names
  */
-const tryReadingDirectory = (dir) => {
+const tryReadingDirectory = (dir, preview=false) => {
 	let files;
 	try {
 		files = fs.readdirSync(dir);
@@ -184,7 +196,9 @@ const tryReadingDirectory = (dir) => {
 		vscode.window.showErrorMessage(`Error reading directory: ${err.message}`);
 		return false;
 	}
-	currentDirectory = dir;
+	if (!preview) {
+		currentDirectory = dir;
+	}
 	return files;
 }
 
@@ -272,6 +286,35 @@ class DiredProvider {
 
 	notifyContentChanged() {
 		this._onDidChange.fire(vscode.Uri.parse("dired://authority/dired"));
+	}
+}
+
+let currentPreviewDirectory = null;
+/**
+ * Allows changing the dired preview buffer contents and watching for changes.
+ */
+class DiredPreviewProvider {
+	constructor() {
+		this._onDidChange = new vscode.EventEmitter();
+		this.onDidChange = this._onDidChange.event;
+	}
+
+	/**
+	 * Provides the text document content for the dired buffer.
+	*/
+	provideTextDocumentContent(uri) {
+		if (!currentPreviewDirectory) return "";
+		console.log("currentPreviewDirectory",currentPreviewDirectory);
+		const entries = tryReadingDirectory(currentPreviewDirectory, true);
+		if (!entries) {
+			return "Cannot read this directory for previewing.";
+		}
+		const entryArray = getFilesAndDirectories(entries, currentPreviewDirectory);
+		return `Preview of ${currentPreviewDirectory}\n\n${entryArray.join("\n")}`;
+	}
+
+	notifyContentChanged() {
+		this._onDidChange.fire(vscode.Uri.parse("diredPreview://authority/directory preview"));
 	}
 }
 
@@ -665,7 +708,7 @@ let selectionChangeListener = null;
  * on the cursor position.
  * @param {vscode.TextDocumentContentProvider} provider
 */
-const toggleDiredPreviewMode = async (provider = null) => {
+const toggleDiredPreviewMode = async (provider, previewProvider) => {
 	const editor = vscode.window.activeTextEditor;
 	if (!editor) return;
 
@@ -686,37 +729,41 @@ const toggleDiredPreviewMode = async (provider = null) => {
 	}
 
 	previewEnabled = true;
-	await updatePreview(editor);
+	await updatePreview(editor, previewProvider);
 
 	selectionChangeListener = vscode.window.onDidChangeTextEditorSelection(async (event) => {
 		if (event.textEditor !== editor) return;
 		if (previewEnabled) {
-			await updatePreview(event.textEditor, true);
+			await updatePreview(event.textEditor, previewProvider, true);
 		}
 	});
 
 	vscode.window.showInformationMessage("Dired Preview Mode Enabled");
 
-	if (provider) {
-		provider.notifyContentChanged();
-	}
+	provider.notifyContentChanged();
 }
 
-const updatePreview = async (editor, preserveFocus = false) => {
+const updatePreview = async (editor, previewProvider) => {
 	const currentLineNumber = editor.selection.active.line;
 	if (!isLineFileOrDir(currentLineNumber)) return;
 
 	const currentLine = editor.document.lineAt(currentLineNumber).text;
+	
+	const openEditorOptions = { preview: true, viewColumn: vscode.ViewColumn.Beside, preserveFocus: true };
+
 	if (currentLine.endsWith(path.sep)) {
-		// Current line is a directory, don't preview directories.
+		// Current line is a directory, preview its contents:
+		currentPreviewDirectory = path.join(currentDirectory,currentLine);
+		const previewUri = vscode.Uri.parse("diredPreview://authority/directory preview");
+		const previewDocument = await vscode.workspace.openTextDocument(previewUri);
+		const previewEditor = await vscode.window.showTextDocument(previewDocument, openEditorOptions);
+		await vscode.languages.setTextDocumentLanguage(previewDocument, "dired");
+		previewProvider.notifyContentChanged();
 		return;
 	}
 
 	// Current line is a file, open it in preview mode:
 	const filePath = path.join(currentDirectory, currentLine);
-
-	const openEditorOptions = { preview: true, viewColumn: vscode.ViewColumn.Beside, preserveFocus: true };
-
 	const fileUri = vscode.Uri.file(filePath);
 	await vscode.commands.executeCommand('vscode.open', fileUri, openEditorOptions);
 
@@ -1002,7 +1049,11 @@ function activate(context) {
 	const provider = new DiredProvider();
 	const providerRegistration = vscode.workspace.registerTextDocumentContentProvider("dired", provider);
 
+	const previewProvider = new DiredPreviewProvider();
+	const previewProviderRegistration = vscode.workspace.registerTextDocumentContentProvider("diredPreview", previewProvider);
+	
 	context.subscriptions.push(providerRegistration);
+	context.subscriptions.push(previewProviderRegistration);
 
 	const commands = [
 		["diredBrowse", () => diredBrowse(provider)],
@@ -1019,7 +1070,7 @@ function activate(context) {
 		["diredPrev", () => moveCursorBy(provider, -1)],
 		["diredNext", () => moveCursorBy(provider, 1)],
 		["diredJumpToName", () => moveCursorToName(provider)],
-		["diredPreview", () => toggleDiredPreviewMode(provider)],
+		["diredPreview", () => toggleDiredPreviewMode(provider, previewProvider)],
 		["diredToggleMark", () => diredToggleMark(provider)],
 		["diredInvertMarks", () => diredInvertMarks(provider)],
 		["diredUnmarkAll", () => removeAllMarks()],
