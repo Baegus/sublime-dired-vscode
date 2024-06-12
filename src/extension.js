@@ -75,6 +75,7 @@ const getCurrentFileContent = (renaming = false) => {
 const setRenameMode = async (on = true) => {
 	const config = vscode.workspace.getConfiguration("dired");
 	await config.update("renameMode", on, vscode.ConfigurationTarget.Global);
+	if (renameDecorationListener) renameDecorationListener.dispose();
 }
 
 /**
@@ -108,6 +109,7 @@ const diredRenameCancel = async (provider = null) => {
 	await showCurrentDirectory(provider);
 }
 
+let renameDecorationListener = null;
 /**
  * Show the rename buffer for editing
  * @param {vscode.TextDocumentContentProvider} provider
@@ -130,7 +132,9 @@ const showRenameBuffer = async (provider = null) => {
 	updateRenameDecorations(editor);
 
 	// Listen for changes in the text editor to update decorations dynamically
-	vscode.workspace.onDidChangeTextDocument(event => {
+	if (renameDecorationListener) renameDecorationListener.dispose();
+	renameDecorationListener = vscode.workspace.onDidChangeTextDocument(event => {
+		console.log("listener");
 		if (event.document === document) {
 			updateRenameDecorations(editor);
 		}
