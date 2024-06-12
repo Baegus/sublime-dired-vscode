@@ -736,7 +736,8 @@ const addMark = async (editor, lineNumber) => {
 
 	const decorationType = vscode.window.createTextEditorDecorationType({
 		textDecoration: "underline",
-		outline: "1px solid yellow",
+		backgroundColor: "rgba(177, 200, 0, 0.3)",
+		outline: "1px solid black",
 	});
 		
 	editor.setDecorations(decorationType, [range]);
