@@ -917,22 +917,24 @@ const addToWorkspace = (fullPath) => {
  * The user can select the currently open directory or the selected/marked directories.
 */
 const diredAddToWorkspace = async () => {
-	const options = [
-		"Add the selected files / directories",
-		"Add the currently open directory"
-	];
-	const selectedOption = await vscode.window.showQuickPick(options, {
+	const actions = {
+		"Add the selected files / directories": () => {
+			const entries = getPathsOfSelectedEntries();
+			entries.forEach((entry) => {
+				addToWorkspace(entry);
+			});
+		},
+		"Add the currently open directory": () => {
+			addToWorkspace(currentDirectory);
+		},
+	};
+	const selectedOption = await vscode.window.showQuickPick(Object.keys(actions), {
 		placeHolder: "Select what to add to the current workspace",
 		canPickMany: false,
 	});
-	if (selectedOption === options[1]) {
-		addToWorkspace(currentDirectory);
-		return;
-	}
-	const entries = getPathsOfSelectedEntries();
-	entries.forEach((entry) => {
-		addToWorkspace(entry);
-	});
+	if (!selectedOption) return;
+
+	actions[selectedOption]();
 }
 
 /**
@@ -940,6 +942,7 @@ const diredAddToWorkspace = async () => {
  * @param {string} fullPath - Full path of the removed directory (will get converted to a VSCode Uri)
 */
 const removeFromWorkspace = (fullPath) => {
+	if (fullPath.endsWith(path.sep)) fullPath = fullPath.slice(0,-1);
 	const existingFolder = vscode.workspace.workspaceFolders
 		? vscode.workspace.workspaceFolders.find(folder => folder.uri.fsPath === fullPath)
 		: null;
@@ -958,24 +961,26 @@ const removeFromWorkspace = (fullPath) => {
  * The user can select the currently open directory or the selected/marked directories.
 */
 const diredRemoveFromWorkspace = async () => {
-	const options = [
-		"Remove the selected files / directories",
-		"Remove the directory currently open in dired"
-	];
-	const selectedOption = await vscode.window.showQuickPick(options, {
+	const actions = {
+		"Remove the selected files / directories": () => {
+			const entries = getPathsOfSelectedEntries();
+			entries.forEach((entry) => {
+				removeFromWorkspace(entry);
+			});
+		},
+		"Remove the directory currently open in dired": () => {
+			console.log("trying to remove", currentDirectory);
+			removeFromWorkspace(currentDirectory);
+		},
+	};
+	const selectedOption = await vscode.window.showQuickPick(Object.keys(actions), {
 		placeHolder: "Select what to remove from the current workspace",
 		canPickMany: false,
 	});
 
-	if (selectedOption === options[1]) {
-		removeFromWorkspace(currentDirectory);
-		return;
-	}
+	if (!selectedOption) return;
 
-	const entries = getPathsOfSelectedEntries();
-	entries.forEach((entry) => {
-		removeFromWorkspace(entry);
-	});
+	actions[selectedOption]();
 }
 
 
