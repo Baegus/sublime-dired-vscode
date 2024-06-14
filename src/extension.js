@@ -969,10 +969,19 @@ const diredRemoveFromWorkspace = async () => {
 			});
 		},
 		"Remove the directory currently open in dired": () => {
-			console.log("trying to remove", currentDirectory);
 			removeFromWorkspace(currentDirectory);
 		},
 	};
+
+	const workspaceFolders = vscode.workspace.workspaceFolders;
+	if (workspaceFolders) {
+		workspaceFolders.map(dir => {
+			actions[`Remove ${dir.uri.fsPath}`] = () => {
+				removeFromWorkspace(dir.uri.fsPath);
+			};
+		});
+	}
+
 	const selectedOption = await vscode.window.showQuickPick(Object.keys(actions), {
 		placeHolder: "Select what to remove from the current workspace",
 		canPickMany: false,
@@ -981,6 +990,78 @@ const diredRemoveFromWorkspace = async () => {
 	if (!selectedOption) return;
 
 	actions[selectedOption]();
+}
+
+/**
+ * Adds a single path to bookmarks
+ * @param {string} fullPath - Full path of the added directory
+*/
+const addToBookmarks = async (fullPath) => {
+	const config = vscode.workspace.getConfiguration("dired");
+	const bookmarkArray = config.get("bookmarks") || [];
+	if (bookmarkArray.includes(fullPath)) return;
+	bookmarkArray.push(fullPath);
+	await config.update("bookmarks", bookmarkArray, vscode.ConfigurationTarget.Global);
+}
+
+
+/**
+ * Removes a single path from bookmarks
+ * @param {string} fullPath - Full path of the added directory
+*/
+const removeFromBookmarks = async (fullPath) => {
+	const config = vscode.workspace.getConfiguration("dired");
+	const bookmarkArray = config.get("bookmarks").filter((bookmark) => {
+		return bookmark !== fullPath;
+	});
+	await config.update("bookmarks", bookmarkArray, vscode.ConfigurationTarget.Global);
+}
+
+/**
+ * Shows an input box to decide which directory will get added to bookmarks.
+ * The user can select the currently open directory or the selected/marked directories.
+*/
+const diredAddToBookmarks = async () => {
+	const actions = {
+		"Add the selected files / directories": () => {
+			const entries = getPathsOfSelectedEntries();
+			entries.forEach((entry) => {
+				addToBookmarks(entry);
+			});
+		},
+		"Add the currently open directory": () => {
+			addToBookmarks(currentDirectory);
+		},
+	};
+	const selectedOption = await vscode.window.showQuickPick(Object.keys(actions), {
+		placeHolder: "Select what to add to Dired bookmakrs",
+		canPickMany: false,
+	});
+	if (!selectedOption) return;
+
+	actions[selectedOption]();
+
+	
+}
+
+/**
+ * Shows an input box to decide which directory will get removed from bookmarks.
+*/
+const diredRemoveFromBookmarks = async () => {
+	const config = vscode.workspace.getConfiguration("dired");
+	const bookmarkArray = config.get("bookmarks") || [];
+	if (bookmarkArray.length === 0) {
+		vscode.window.showInformationMessage(`There are no saved bookmarks.`);
+		return;
+	}
+	const selectedOption = await vscode.window.showQuickPick(bookmarkArray, {
+		placeHolder: "Select what to remove from bookmarks",
+		canPickMany: false,
+	});
+
+	if (!selectedOption) return;
+
+	removeFromBookmarks(selectedOption);
 }
 
 
@@ -999,33 +1080,39 @@ const diredGoto = (provider) => {
  * @param {vscode.TextDocumentContentProvider} provider
 */
 const diredGotoAnywhere = async (provider) => {
-	const options = [];
+	const actions = {};
 	const workspaceFolders = vscode.workspace.workspaceFolders;
 
 	if (workspaceFolders) {
 		workspaceFolders.map(dir => {
-			options.push(dir.uri.fsPath);
-			return dir.uri.fsPath
+			actions[`Workspace: ${dir.uri.fsPath}`] = dir.uri.fsPath;
 		});
 	}
 
-	options.push(os.homedir());
+	const config = vscode.workspace.getConfiguration("dired");
+	const bookmarkArray = config.get("bookmarks") || [];
+	bookmarkArray.forEach((bookmarkPath) => {
+		actions[`Bookmark: ${bookmarkPath}`] = bookmarkPath;
+	})
 
-	options.push("Browse...");
+	actions[`Home: ${os.homedir()}`] = os.homedir();
 
-	const selectedOption = await vscode.window.showQuickPick(options, {
+	const browseAction = "Browse...";
+	actions[browseAction] = "";
+
+	const selectedOption = await vscode.window.showQuickPick(Object.keys(actions), {
 		placeHolder: "Select a directory to open...",
 		canPickMany: false,
 	});
 
 	if (!selectedOption) return;
 
-	if (selectedOption === options[options.length-1]) {
+	if (selectedOption === browseAction) {
 		diredBrowse(provider);
 		return;
 	}
 
-	currentDirectory = selectedOption;
+	currentDirectory = actions[selectedOption];
 	await showCurrentDirectory(provider);
 }
 
@@ -1080,7 +1167,9 @@ function activate(context) {
 		["diredUnmarkAll", () => removeAllMarks()],
 		["diredMarkByPartialName", () => diredMarkByPartialName()],
 		["diredAddToWorkspace", () => diredAddToWorkspace()],
+		["diredAddToBookmarks", () => diredAddToBookmarks()],
 		["diredRemoveFromWorkspace", () => diredRemoveFromWorkspace()],
+		["diredRemoveFromBookmarks", () => diredRemoveFromBookmarks()],
 		["diredGoto", () => diredGoto(provider)],
 		["diredGotoAnywhere", () => diredGotoAnywhere(provider)],
 

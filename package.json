@@ -32,6 +32,11 @@
 						"desktop.ini",
 						"^__MACOSX"
 					]
+				},
+				"dired.bookmarks": {
+					"description": "A list of frequently visited directories, accessible from 'Go to anywhere'.",
+					"type": "array",
+					"default": []
 				}
 			}
 		},
@@ -177,8 +182,18 @@
 				"when": "editorTextFocus && editorLangId == 'dired' && !config.dired.renameMode"
 			},
 			{
+				"key": "a b",
+				"command": "extension.diredAddToBookmarks",
+				"when": "editorTextFocus && editorLangId == 'dired' && !config.dired.renameMode"
+			},
+			{
 				"key": "r w",
 				"command": "extension.diredRemoveFromWorkspace",
+				"when": "editorTextFocus && editorLangId == 'dired' && !config.dired.renameMode"
+			},
+			{
+				"key": "r b",
+				"command": "extension.diredRemoveFromBookmarks",
 				"when": "editorTextFocus && editorLangId == 'dired' && !config.dired.renameMode"
 			},
 			{

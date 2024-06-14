@@ -26,7 +26,9 @@ const controlsHelp = {
 		],
 		[
 			["B", "go to anywhere"],
+			["ab", "add to bookmarks"],
 			["aw", "add to workspace"],
+			["rb", "remove from bookmark"],
 			["rw", "remove from workspace"],
 		],
 		[
