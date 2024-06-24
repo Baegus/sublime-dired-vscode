@@ -701,6 +701,7 @@ let previewEnabled = false;
 let previewEditor = null;
 let diredEditor = null;
 let selectionChangeListener = null;
+let documentUpdateListener = null;
 
 /**
  * Shows a second editor view alongside the current one and previews (opens) the file 
@@ -719,9 +720,8 @@ const toggleDiredPreviewMode = async (provider, previewProvider) => {
 			await vscode.commands.executeCommand("workbench.action.closeEditorsInOtherGroups");
 			previewEditor = null;
 		}
-		if (selectionChangeListener) {
-			selectionChangeListener.dispose();
-		}
+		if (selectionChangeListener) selectionChangeListener.dispose();
+		if (documentUpdateListener)  documentUpdateListener.dispose();
 		previewEnabled = false;
 		vscode.window.showInformationMessage("Dired Preview Mode Disabled");
 		return;
@@ -730,12 +730,15 @@ const toggleDiredPreviewMode = async (provider, previewProvider) => {
 	previewEnabled = true;
 	await updatePreview(editor, previewProvider);
 
-	selectionChangeListener = vscode.window.onDidChangeTextEditorSelection(async (event) => {
+	const update = async (event) => {
 		if (event.textEditor !== editor) return;
 		if (previewEnabled) {
 			await updatePreview(event.textEditor, previewProvider, true);
 		}
-	});
+	}
+
+	selectionChangeListener = vscode.window.onDidChangeTextEditorSelection(update);
+	documentUpdateListener = vscode.window.onDidChangeTextEditorVisibleRanges(update);
 
 	vscode.window.showInformationMessage("Dired Preview Mode Enabled");
 
