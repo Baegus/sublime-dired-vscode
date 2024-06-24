@@ -210,11 +210,6 @@
 				"key": "j",
 				"command": "extension.diredJumpToName",
 				"when": "editorTextFocus && editorLangId == 'dired' && !config.dired.renameMode"
-			},
-			{
-				"key": "tab",
-				"command": "extension.diredComplete",
-				"when": "editorTextFocus && editorLangId == 'dired' && config.diredComplete"
 			}
 		]
 	}
