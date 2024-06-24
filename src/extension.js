@@ -758,7 +758,7 @@ const updatePreview = async (editor, previewProvider) => {
 		currentPreviewDirectory = path.join(currentDirectory,currentLine);
 		const previewUri = vscode.Uri.parse("diredPreview://authority/directory preview");
 		const previewDocument = await vscode.workspace.openTextDocument(previewUri);
-		const previewEditor = await vscode.window.showTextDocument(previewDocument, openEditorOptions);
+		previewEditor = await vscode.window.showTextDocument(previewDocument, openEditorOptions);
 		await vscode.languages.setTextDocumentLanguage(previewDocument, "dired");
 		previewProvider.notifyContentChanged();
 		return;
