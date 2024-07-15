@@ -7,6 +7,7 @@ const { controlsHelpStrings } = require("./controlsHelp");
 let currentDirectory = false; // Current working directory
 let lastWorkingDirectory = false; // The last successfully opened directory
 let lastEntryLineNumber = 2; // On which line the last file is located
+let isRenameModeEnabled = false; // Are we currently in Rename mode?
 
 const omitRegexes = []; // Parsed omitPatterns (filled in setupOmitPatterns())
 
@@ -85,17 +86,9 @@ const getCurrentFileContent = (renaming = false) => {
  * @param {boolean} on - if true, Rename mode is on
  */
 const setRenameMode = async (on = true) => {
-	const config = vscode.workspace.getConfiguration("dired");
-	await config.update("renameMode", on, vscode.ConfigurationTarget.Global);
+	isRenameModeEnabled = on;
 	if (renameDecorationListener) renameDecorationListener.dispose();
-}
-
-/**
- * Check if we're in Rename mode
- */
-const isRenameModeEnabled = () => {
-	const config = vscode.workspace.getConfiguration("dired");
-	return config.get("renameMode");
+	await vscode.commands.executeCommand("setContext", "dired.renameMode", on);
 }
 
 /**
@@ -103,7 +96,7 @@ const isRenameModeEnabled = () => {
  * @param {vscode.TextDocumentContentProvider} provider
  */
 const enterRenameMode = async (provider = null) => {
-	if (isRenameModeEnabled()) return;
+	if (isRenameModeEnabled) return;
 	removeAllMarks();
 	await setRenameMode(true);
 	await vscode.commands.executeCommand("workbench.action.revertAndCloseActiveEditor");

@@ -18,11 +18,6 @@
 			"type": "object",
 			"title": "Dired Extension Configuration",
 			"properties": {
-				"dired.renameMode": {
-					"description": "Enable/Disable rename mode in Dired.",
-					"type": "boolean",
-					"default": false
-				},
 				"dired.omitPatterns": {
 					"description": "Files matching these RegExp patterns won't be shown in Dired.",
 					"type": "array",
@@ -74,142 +69,142 @@
 			{
 				"key": "p",
 				"command": "extension.diredPrev",
-				"when": "editorTextFocus && editorLangId == 'dired' && !config.dired.renameMode"
+				"when": "editorTextFocus && editorLangId == 'dired' && !dired.renameMode"
 			},
 			{
 				"key": "n",
 				"command": "extension.diredNext",
-				"when": "editorTextFocus && editorLangId == 'dired' && !config.dired.renameMode"
+				"when": "editorTextFocus && editorLangId == 'dired' && !dired.renameMode"
 			},
 			{
 				"key": "enter",
 				"command": "extension.diredSelect",
-				"when": "editorTextFocus && editorLangId == 'dired' && !config.dired.renameMode"
+				"when": "editorTextFocus && editorLangId == 'dired' && !dired.renameMode"
 			},
 			{
 				"key": "cmd+enter",
 				"command": "extension.diredSelect",
-				"when": "editorTextFocus && editorLangId == 'dired' && !config.dired.renameMode"
+				"when": "editorTextFocus && editorLangId == 'dired' && !dired.renameMode"
 			},
 			{
 				"key": "ctrl+enter",
 				"command": "extension.diredSelect",
-				"when": "editorTextFocus && editorLangId == 'dired' && !config.dired.renameMode"
+				"when": "editorTextFocus && editorLangId == 'dired' && !dired.renameMode"
 			},
 			{
 				"key": "o",
 				"command": "extension.diredSelect",
-				"when": "editorTextFocus && editorLangId == 'dired' && !config.dired.renameMode"
+				"when": "editorTextFocus && editorLangId == 'dired' && !dired.renameMode"
 			},
 			{
 				"key": "c d",
 				"command": "extension.diredCreateDirectory",
-				"when": "editorTextFocus && editorLangId == 'dired' && !config.dired.renameMode"
+				"when": "editorTextFocus && editorLangId == 'dired' && !dired.renameMode"
 			},
 			{
 				"key": "c f",
 				"command": "extension.diredCreateFile",
-				"when": "editorTextFocus && editorLangId == 'dired' && !config.dired.renameMode"
+				"when": "editorTextFocus && editorLangId == 'dired' && !dired.renameMode"
 			},
 			{
 				"key": "r v",
 				"command": "extension.diredRefresh",
-				"when": "editorTextFocus && editorLangId == 'dired' && !config.dired.renameMode"
+				"when": "editorTextFocus && editorLangId == 'dired' && !dired.renameMode"
 			},
 			{
 				"key": "m",
 				"command": "extension.diredToggleMark",
-				"when": "editorTextFocus && editorLangId == 'dired' && !config.dired.renameMode"
+				"when": "editorTextFocus && editorLangId == 'dired' && !dired.renameMode"
 			},
 			{
 				"key": "shift+u",
 				"command": "extension.diredUnmarkAll",
-				"when": "editorTextFocus && editorLangId == 'dired' && !config.dired.renameMode"
+				"when": "editorTextFocus && editorLangId == 'dired' && !dired.renameMode"
 			},
 			{
 				"key": "t",
 				"command": "extension.diredInvertMarks",
-				"when": "editorTextFocus && editorLangId == 'dired' && !config.dired.renameMode"
+				"when": "editorTextFocus && editorLangId == 'dired' && !dired.renameMode"
 			},
 			{
 				"key": "u",
 				"command": "extension.diredUp",
-				"when": "editorTextFocus && editorLangId == 'dired' && !config.dired.renameMode"
+				"when": "editorTextFocus && editorLangId == 'dired' && !dired.renameMode"
 			},
 			{
 				"key": "shift+d",
 				"command": "extension.diredDelete",
-				"when": "editorTextFocus && editorLangId == 'dired' && !config.dired.renameMode"
+				"when": "editorTextFocus && editorLangId == 'dired' && !dired.renameMode"
 			},
 			{
 				"key": "shift+m",
 				"command": "extension.diredMove",
-				"when": "editorTextFocus && editorLangId == 'dired' && !config.dired.renameMode"
+				"when": "editorTextFocus && editorLangId == 'dired' && !dired.renameMode"
 			},
 			{
 				"key": "s",
 				"command": "extension.diredMarkByPartialName",
-				"when": "editorTextFocus && editorLangId == 'dired' && !config.dired.renameMode"
+				"when": "editorTextFocus && editorLangId == 'dired' && !dired.renameMode"
 			},
 			{
 				"key": "shift+r",
 				"command": "extension.diredRename",
-				"when": "editorTextFocus && editorLangId == 'dired' && !config.dired.renameMode"
+				"when": "editorTextFocus && editorLangId == 'dired' && !dired.renameMode"
 			},
 			{
 				"key": "ctrl+enter",
 				"command": "extension.diredRenameCommit",
-				"when": "editorTextFocus && editorLangId == 'dired' && config.dired.renameMode"
+				"when": "editorTextFocus && editorLangId == 'dired' && dired.renameMode"
 			},
 			{
 				"key": "cmd+enter",
 				"command": "extension.diredRenameCommit",
-				"when": "editorTextFocus && editorLangId == 'dired' && config.dired.renameMode"
+				"when": "editorTextFocus && editorLangId == 'dired' && dired.renameMode"
 			},
 			{
 				"key": "shift+escape",
 				"command": "extension.diredRenameCancel",
-				"when": "editorTextFocus && editorLangId == 'dired' && config.dired.renameMode"
+				"when": "editorTextFocus && editorLangId == 'dired' && dired.renameMode"
 			},
 			{
 				"key": "g",
 				"command": "extension.diredGoto",
-				"when": "editorTextFocus && editorLangId == 'dired' && !config.dired.renameMode"
+				"when": "editorTextFocus && editorLangId == 'dired' && !dired.renameMode"
 			},
 			{
 				"key": "a w",
 				"command": "extension.diredAddToWorkspace",
-				"when": "editorTextFocus && editorLangId == 'dired' && !config.dired.renameMode"
+				"when": "editorTextFocus && editorLangId == 'dired' && !dired.renameMode"
 			},
 			{
 				"key": "a b",
 				"command": "extension.diredAddToBookmarks",
-				"when": "editorTextFocus && editorLangId == 'dired' && !config.dired.renameMode"
+				"when": "editorTextFocus && editorLangId == 'dired' && !dired.renameMode"
 			},
 			{
 				"key": "r w",
 				"command": "extension.diredRemoveFromWorkspace",
-				"when": "editorTextFocus && editorLangId == 'dired' && !config.dired.renameMode"
+				"when": "editorTextFocus && editorLangId == 'dired' && !dired.renameMode"
 			},
 			{
 				"key": "r b",
 				"command": "extension.diredRemoveFromBookmarks",
-				"when": "editorTextFocus && editorLangId == 'dired' && !config.dired.renameMode"
+				"when": "editorTextFocus && editorLangId == 'dired' && !dired.renameMode"
 			},
 			{
 				"key": "shift+b",
 				"command": "extension.diredGotoAnywhere",
-				"when": "editorTextFocus && editorLangId == 'dired' && !config.dired.renameMode"
+				"when": "editorTextFocus && editorLangId == 'dired' && !dired.renameMode"
 			},
 			{
 				"key": "shift+p",
 				"command": "extension.diredPreview",
-				"when": "editorTextFocus && editorLangId == 'dired' && !config.dired.renameMode"
+				"when": "editorTextFocus && editorLangId == 'dired' && !dired.renameMode"
 			},
 			{
 				"key": "j",
 				"command": "extension.diredJumpToName",
-				"when": "editorTextFocus && editorLangId == 'dired' && !config.dired.renameMode"
+				"when": "editorTextFocus && editorLangId == 'dired' && !dired.renameMode"
 			}
 		]
 	}
