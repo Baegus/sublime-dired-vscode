@@ -42,7 +42,11 @@
 			},
 			{
 				"command": "extension.diredGotoAnywhere",
-				"title": "Dired - go to anywhere"
+				"title": "Dired - Go to anywhere"
+			},
+			{
+				"command": "extension.diredEnterPath",
+				"title": "Dired - Enter path manually"
 			}
 		],
 		"languages": [

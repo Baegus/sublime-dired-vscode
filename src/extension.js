@@ -1070,6 +1070,33 @@ const diredGoto = (provider) => {
 	diredBrowse(provider, currentDirectory);
 }
 
+/**
+ * Shows an input box to manually enter a directory path to open (an alternative to Browse...)
+ * @param {vscode.TextDocumentContentProvider} provider
+*/
+const diredEnterPath = async (provider) => {
+	const defaultDir = currentDirectory || os.homedir();
+	const targetPath = await vscode.window.showInputBox({
+		value: defaultDir,
+		prompt: "Enter a directory path to open...",
+	});
+	if (!targetPath) return;
+
+	try {
+		const stats = fs.statSync(targetPath);
+		if (!stats || !stats.isDirectory()) {
+			vscode.window.showErrorMessage(`${targetPath} is not a valid directory path.`);
+			return;
+		}
+	} catch (err) {
+		vscode.window.showErrorMessage(`Couldn't open ${targetPath}.`);
+		return;
+	}
+
+	currentDirectory = targetPath;
+	showCurrentDirectory(provider);
+}
+
 
 /**
  * Shows an input box to decide if Dired will open one of the project directories or open a file browser.
@@ -1096,6 +1123,9 @@ const diredGotoAnywhere = async (provider) => {
 	const browseAction = "Browse...";
 	actions[browseAction] = "";
 
+	const enterPathAction = "Enter path manually...";
+	actions[enterPathAction] = "";
+
 	const selectedOption = await vscode.window.showQuickPick(Object.keys(actions), {
 		placeHolder: "Select a directory to open...",
 		canPickMany: false,
@@ -1105,6 +1135,11 @@ const diredGotoAnywhere = async (provider) => {
 
 	if (selectedOption === browseAction) {
 		diredBrowse(provider);
+		return;
+	}
+
+	if (selectedOption === enterPathAction) {
+		diredEnterPath(provider);
 		return;
 	}
 
@@ -1144,6 +1179,7 @@ function activate(context) {
 
 	const commands = [
 		["diredBrowse", () => diredBrowse(provider)],
+		["diredEnterPath", () => diredEnterPath(provider)],
 		["diredRefresh", () => diredRefresh(provider)],
 		["diredSelect", () => diredSelect(provider)],
 		["diredUp", () => diredUp(provider)],
@@ -1168,8 +1204,6 @@ function activate(context) {
 		["diredRemoveFromBookmarks", () => diredRemoveFromBookmarks()],
 		["diredGoto", () => diredGoto(provider)],
 		["diredGotoAnywhere", () => diredGotoAnywhere(provider)],
-
-		
 	];
 	commands.forEach((item) => {
 		const registered = vscode.commands.registerCommand(`extension.${item[0]}`, item[1]);
