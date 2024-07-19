@@ -351,7 +351,7 @@ const showCurrentDirectory = async (provider = null) => {
  * Go up a directory, if possible.
  * @param {vscode.TextDocumentContentProvider} provider
  */
-const diredUp = async (provider) => {
+const diredUp = async (provider,previewProvider) => {
 	if (!currentDirectory) return;
 
 	removeAllMarks();
@@ -368,6 +368,12 @@ const diredUp = async (provider) => {
 
 	currentDirectory = parentDir;
 	await showCurrentDirectory(provider);
+
+	if (previewEnabled) {
+		setTimeout(async () => {
+			await updatePreview(vscode.window.activeTextEditor, previewProvider, true);
+		}, 200);
+	}
 }
 
 /**
@@ -1182,7 +1188,7 @@ function activate(context) {
 		["diredEnterPath", () => diredEnterPath(provider)],
 		["diredRefresh", () => diredRefresh(provider)],
 		["diredSelect", () => diredSelect(provider)],
-		["diredUp", () => diredUp(provider)],
+		["diredUp", () => diredUp(provider,previewProvider)],
 		["diredRename", () => enterRenameMode(provider)],
 		["diredRenameCancel", () => diredRenameCancel(provider)],
 		["diredRenameCommit", () => applyRenameChanges(provider)],
