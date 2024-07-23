@@ -188,7 +188,9 @@ const tryReadingDirectory = (dir, preview=false) => {
 	try {
 		files = fs.readdirSync(dir);
 	} catch (err) {
-		vscode.window.showErrorMessage(`Error reading directory: ${err.message}`);
+		if (!preview) {
+			vscode.window.showErrorMessage(`Error reading directory: ${err.message}`);
+		}
 		return false;
 	}
 	if (!preview) {
