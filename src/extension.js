@@ -371,7 +371,7 @@ const diredUp = async (provider,previewProvider) => {
 
 	if (previewEnabled) {
 		setTimeout(async () => {
-			await updatePreview(vscode.window.activeTextEditor, previewProvider, true);
+			await updatePreview(vscode.window.activeTextEditor, previewProvider, false);
 		}, 200);
 	}
 }
@@ -727,14 +727,14 @@ const toggleDiredPreviewMode = async (provider, previewProvider) => {
 	}
 
 	previewEnabled = true;
-	await updatePreview(editor, previewProvider);
+	await updatePreview(editor, previewProvider, false);
 
 	const update = async (event) => {
 		if (event.textEditor !== editor) return;
 		if (previewEnabled) {
-			await updatePreview(event.textEditor, previewProvider, true);
+			await updatePreview(event.textEditor, previewProvider, false);
 		}
-	}
+	};
 
 	selectionChangeListener = vscode.window.onDidChangeTextEditorSelection(update);
 	documentUpdateListener = vscode.window.onDidChangeTextEditorVisibleRanges(update);
@@ -742,19 +742,20 @@ const toggleDiredPreviewMode = async (provider, previewProvider) => {
 	vscode.window.showInformationMessage("Dired Preview Mode Enabled");
 
 	provider.notifyContentChanged();
-}
+};
 
-const updatePreview = async (editor, previewProvider) => {
+
+const updatePreview = async (editor, previewProvider, focusPreview = false) => {
 	const currentLineNumber = editor.selection.active.line;
 	if (!isLineFileOrDir(currentLineNumber)) return;
 
 	const currentLine = editor.document.lineAt(currentLineNumber).text;
-	
-	const openEditorOptions = { preview: true, viewColumn: vscode.ViewColumn.Beside, preserveFocus: true };
+
+	const openEditorOptions = { preview: true, viewColumn: vscode.ViewColumn.Beside, preserveFocus: !focusPreview };
 
 	if (currentLine.endsWith(path.sep)) {
 		// Current line is a directory, preview its contents:
-		currentPreviewDirectory = path.join(currentDirectory,currentLine);
+		currentPreviewDirectory = path.join(currentDirectory, currentLine);
 		const previewUri = vscode.Uri.parse("diredPreview://authority/directory preview");
 		const previewDocument = await vscode.workspace.openTextDocument(previewUri);
 		previewEditor = await vscode.window.showTextDocument(previewDocument, openEditorOptions);
@@ -768,8 +769,10 @@ const updatePreview = async (editor, previewProvider) => {
 	const fileUri = vscode.Uri.file(filePath);
 	await vscode.commands.executeCommand('vscode.open', fileUri, openEditorOptions);
 
-	// Set focus back to the dired editor
-	await vscode.window.showTextDocument(diredEditor.document, { viewColumn: diredEditor.viewColumn, preserveFocus: true });
+	// Set focus back to the dired editor if not focusing on preview
+	if (!focusPreview) {
+		await vscode.window.showTextDocument(diredEditor.document, { viewColumn: diredEditor.viewColumn, preserveFocus: true });
+	}
 }
 
 let markedLines = {}; // An object to store marked lines and their CSS decorations
@@ -1219,6 +1222,19 @@ function activate(context) {
 	setupOmitPatterns(); // Parse user omitPatterns or create the default ones
 	diredRenameCancel(provider); // Make sure we're not in Rename mode by default
 	removeAllMarks(); // Remove any leftover marks from previous sessions
+
+	/**
+	 * Make sure Preview mode is disabled when closing Dired editor
+	 */
+	vscode.window.onDidChangeVisibleTextEditors((editors) => {
+		if (!diredEditor) return;
+		const diredVisible = editors.some(editor => editor === diredEditor);
+		if (diredVisible) return;
+		previewEnabled = false;
+		previewEditor = null;
+		if (selectionChangeListener) selectionChangeListener.dispose();
+		if (documentUpdateListener) documentUpdateListener.dispose();
+	});
 }
 
 exports.activate = activate;
