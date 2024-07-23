@@ -57,7 +57,9 @@ const getCurrentFileContent = (renaming = false) => {
 		entries = tryReadingDirectory(lastWorkingDirectory);
 	}
 
-	let fileContent = `${renaming?"Renaming in ":""}${currentDirectory}${path.sep}\n\n`;
+	const currentDirectoryPathText = `${currentDirectory}${!currentDirectory.endsWith(path.sep)?path.sep:""}`;
+
+	let fileContent = `${renaming?"Renaming in ":""}${currentDirectoryPathText}\n\n`;
 
 	if (!entries) {
 		fileContent += "Error reading from disk.";
