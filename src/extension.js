@@ -11,6 +11,16 @@ let isRenameModeEnabled = false; // Are we currently in Rename mode?
 
 const omitRegexes = []; // Parsed omitPatterns (filled in setupOmitPatterns())
 
+// Preview mode state management
+let previewEnabled = false;
+let previewEditor = null;
+let diredEditor = null;
+let selectionChangeListener = null;
+let documentUpdateListener = null;
+let editorChangeListener = null;
+let previewActiveDisposables = [];
+let lastActivePosition = null;
+
 /**
  * Gets the final entry array of files and directories.
  * Skips ones matching any of the omitPatterns regexes.
@@ -700,12 +710,6 @@ const moveCursorToName = async (provider = null) => {
 	editor.revealRange(range);
 }
 
-let previewEnabled = false;
-let previewEditor = null;
-let diredEditor = null;
-let selectionChangeListener = null;
-let documentUpdateListener = null;
-
 /**
  * Shows a second editor view alongside the current one and previews (opens) the file 
  * on the cursor position.
@@ -724,62 +728,100 @@ const toggleDiredPreviewMode = async (provider, previewProvider) => {
 			previewEditor = null;
 		}
 		if (selectionChangeListener) selectionChangeListener.dispose();
-		if (documentUpdateListener)  documentUpdateListener.dispose();
+		if (documentUpdateListener) documentUpdateListener.dispose();
+		if (editorChangeListener) editorChangeListener.dispose();
+		previewActiveDisposables.forEach(disposable => disposable.dispose());
+		previewActiveDisposables = [];
 		previewEnabled = false;
+		lastActivePosition = null;
 		vscode.window.showInformationMessage("Dired Preview Mode Disabled");
 		return;
 	}
 
 	previewEnabled = true;
+	lastActivePosition = editor.selection.active.line;
 	await updatePreview(editor, previewProvider, false);
 
 	const update = async (event) => {
-		if (event.textEditor !== editor) return;
+		if (event.textEditor !== diredEditor) return;
+		// Store the position for resuming preview
+		lastActivePosition = event.textEditor.selection.active.line;
 		if (previewEnabled) {
 			await updatePreview(event.textEditor, previewProvider, false);
 		}
 	};
 
 	selectionChangeListener = vscode.window.onDidChangeTextEditorSelection(update);
-	documentUpdateListener = vscode.window.onDidChangeTextEditorVisibleRanges(update);
+	
+	documentUpdateListener = vscode.window.onDidChangeTextEditorVisibleRanges(async (event) => {
+		if (event.textEditor !== diredEditor) return;
+		if (previewEnabled) {
+			await updatePreview(event.textEditor, previewProvider, false);
+		}
+	});
+	
+	editorChangeListener = vscode.window.onDidChangeActiveTextEditor(async (activeEditor) => {
+		// Only respond to changes when we return to the dired editor
+		if (activeEditor && diredEditor && activeEditor.document.uri.toString() === diredEditor.document.uri.toString()) {
+			if (previewEnabled) {
+				// Brief timeout to ensure UI has stabilized
+				setTimeout(async () => {
+					// Restore the cursor to the last known position if available
+					if (lastActivePosition !== null) {
+						const position = new vscode.Position(lastActivePosition, 0);
+						activeEditor.selection = new vscode.Selection(position, position);
+						activeEditor.revealRange(new vscode.Range(position, position));
+					}
+					await updatePreview(activeEditor, previewProvider, false);
+				}, 100);
+			}
+		}
+	});
+
+	previewActiveDisposables.push(selectionChangeListener, documentUpdateListener, editorChangeListener);
 
 	vscode.window.showInformationMessage("Dired Preview Mode Enabled");
-
-	provider.notifyContentChanged();
 };
 
 
 const updatePreview = async (editor, previewProvider, focusPreview = false) => {
+	if (!editor || !previewEnabled) return;
+	
 	const currentLineNumber = editor.selection.active.line;
 	if (!isLineFileOrDir(currentLineNumber)) return;
 
 	const currentLine = editor.document.lineAt(currentLineNumber).text;
+	lastActivePosition = currentLineNumber;
 
 	const openEditorOptions = { preview: true, viewColumn: vscode.ViewColumn.Beside, preserveFocus: !focusPreview };
 
-	if (currentLine.endsWith(path.sep)) {
-		// Current line is a directory, preview its contents:
-		currentPreviewDirectory = path.join(currentDirectory, currentLine);
-		const previewUri = vscode.Uri.parse("diredPreview://authority/directory preview");
-		const previewDocument = await vscode.workspace.openTextDocument(previewUri);
-		previewEditor = await vscode.window.showTextDocument(previewDocument, openEditorOptions);
-		await vscode.languages.setTextDocumentLanguage(previewDocument, "dired");
-		previewProvider.notifyContentChanged();
-		return;
-	}
+	try {
+		if (currentLine.endsWith(path.sep)) {
+			// Current line is a directory, preview its contents:
+			currentPreviewDirectory = path.join(currentDirectory, currentLine);
+			const previewUri = vscode.Uri.parse("diredPreview://authority/directory preview");
+			const previewDocument = await vscode.workspace.openTextDocument(previewUri);
+			previewEditor = await vscode.window.showTextDocument(previewDocument, openEditorOptions);
+			await vscode.languages.setTextDocumentLanguage(previewDocument, "dired");
+			previewProvider.notifyContentChanged();
+		} else {
+			// Current line is a file, open it in preview mode:
+			const filePath = path.join(currentDirectory, currentLine);
+			const fileUri = vscode.Uri.file(filePath);
+			await vscode.commands.executeCommand('vscode.open', fileUri, openEditorOptions);
+		}
 
-	// Current line is a file, open it in preview mode:
-	const filePath = path.join(currentDirectory, currentLine);
-	const fileUri = vscode.Uri.file(filePath);
-	await vscode.commands.executeCommand('vscode.open', fileUri, openEditorOptions);
-
-	// Set focus back to the dired editor if not focusing on preview
-	if (!focusPreview) {
-		await vscode.window.showTextDocument(diredEditor.document, { viewColumn: diredEditor.viewColumn, preserveFocus: true });
+		// Set focus back to the dired editor if not focusing on preview
+		if (!focusPreview && diredEditor) {
+			await vscode.window.showTextDocument(diredEditor.document, { 
+				viewColumn: diredEditor.viewColumn, 
+				preserveFocus: true 
+			});
+		}
+	} catch (err) {
+		console.log('Preview error:', err);
 	}
 }
-
-let markedLines = {}; // An object to store marked lines and their CSS decorations
 
 /**
  * Add a given line number to makredLines and set its decoration
@@ -1229,16 +1271,64 @@ function activate(context) {
 
 	/**
 	 * Make sure Preview mode is disabled when closing Dired editor
+	 * and re-establish when switching back to a Dired editor
 	 */
 	vscode.window.onDidChangeVisibleTextEditors((editors) => {
-		if (!diredEditor) return;
-		const diredVisible = editors.some(editor => editor === diredEditor);
-		if (diredVisible) return;
-		previewEnabled = false;
-		previewEditor = null;
-		if (selectionChangeListener) selectionChangeListener.dispose();
-		if (documentUpdateListener) documentUpdateListener.dispose();
+		const diredVisible = editors.some(editor => 
+			editor === diredEditor || 
+			(diredEditor && editor.document.uri.toString() === diredEditor.document.uri.toString())
+		);
+		
+		if (!diredVisible) {
+			// If the dired editor is no longer visible, track that fact but don't
+			// dispose of listeners yet - we might be temporarily viewing another file
+		} else if (diredEditor && previewEnabled) {
+			// Restore preview when returning to a visible dired editor
+			const currentEditor = editors.find(e => 
+				e.document.uri.toString() === diredEditor.document.uri.toString()
+			);
+			
+			if (!currentEditor) return;
+			
+			setTimeout(async () => {
+				// Update the diredEditor reference to the current editor
+				diredEditor = currentEditor;
+				// Restore the last cursor position
+				if (lastActivePosition !== null) {
+					const position = new vscode.Position(lastActivePosition, 0);
+					currentEditor.selection = new vscode.Selection(position, position);
+					currentEditor.revealRange(new vscode.Range(position, position));
+				}
+				await updatePreview(currentEditor, previewProvider, false);
+			}, 200);
+		}
 	});
+	
+	context.subscriptions.push(vscode.workspace.onDidCloseTextDocument(document => {
+		// Check if we're closing something other than the dired document
+		// and if we need to restore preview
+		if (!previewEnabled || !diredEditor || 
+			document.uri.toString() === diredEditor.document.uri.toString()) {
+			return;
+		}
+
+		// Wait a short time to ensure focus returns to dired
+		setTimeout(async () => {
+			const activeEditor = vscode.window.activeTextEditor;
+			if (!activeEditor || !diredEditor || 
+				activeEditor.document.uri.toString() !== diredEditor.document.uri.toString()) {
+				return;
+			}
+
+			// Restore position and preview
+			if (lastActivePosition !== null) {
+				const position = new vscode.Position(lastActivePosition, 0);
+				activeEditor.selection = new vscode.Selection(position, position);
+				activeEditor.revealRange(new vscode.Range(position, position));
+			}
+			await updatePreview(activeEditor, previewProvider, false);
+		}, 200);
+	}));
 }
 
 exports.activate = activate;
