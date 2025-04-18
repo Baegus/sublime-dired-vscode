@@ -1,8 +1,11 @@
+<div align="center">
+	<img src="https://raw.githubusercontent.com/Baegus/sublime-dired-vscode/main/logo.png" alt="Logo" width="256">
+</div>
 
 # Sublime Dired for VS Code
 This Visual Studio Code extension lets you edit *(rename, move, create, delete, preview)* directories and files right from your text editor's buffer, enabling **very efficient, keyboard-driven file management**.
 
-### PUT ANIMATION HERE
+![Demo Animation](https://raw.githubusercontent.com/Baegus/sublime-dired-vscode/main/demo.gif)
 
 *Inspired by the [dired extension for Sublime Text](https://packagecontrol.io/packages/dired). Originally inspired by [dired mode in Emacs](https://www.gnu.org/software/emacs/manual/html_node/emacs/Dired.html).*
 
