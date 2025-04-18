@@ -823,6 +823,8 @@ const updatePreview = async (editor, previewProvider, focusPreview = false) => {
 	}
 }
 
+let markedLines = {}; // An object to store marked lines and their CSS decorations
+
 /**
  * Add a given line number to makredLines and set its decoration
  * @param {vscode.Editor} editor
