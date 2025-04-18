@@ -3,13 +3,20 @@
 	"displayName": "Sublime Dired for VSCode",
 	"description": "A VSCode extension to edit directories as text buffers. Inspired by the dired extension for Sublime Text.",
 	"version": "0.0.1",
+	"publisher": "Baegus",
+	"icon": "logo.png",
 	"engines": {
-		"vscode": "^1.60.0"
+		"vscode": "^1.75.0"
 	},
 	"categories": [
 		"Other"
 	],
 	"main": "src/extension.js",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/Baegus/sublime-dired-vscode.git"
+	},
+	"homepage": "https://github.com/Baegus/sublime-dired-vscode",
 	"devDependencies": {
 		"vscode": "^1.60.0"
 	},
