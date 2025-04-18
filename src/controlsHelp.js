@@ -4,8 +4,8 @@ const isMacOS = os.platform() === "darwin";
 const controlsHelp = {
 	default: [
 		[
-			["m", "toggle mark"],
-			["t", "toggle all marks"],
+			["m", "toggle mark (select / deselect)"],
+			["t", "toggle all marks (select all / invert selection)"],
 			["U", "unmark all"],
 			["s", "mark by partial filename"],
 		],
