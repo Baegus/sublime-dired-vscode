@@ -2,8 +2,10 @@
 	<img src="https://raw.githubusercontent.com/Baegus/sublime-dired-vscode/main/logo.png" alt="Logo" width="256">
 </div>
 
-# Sublime Dired for VS Code
+# [Sublime Dired for VS Code](https://marketplace.visualstudio.com/items/?itemName=Baegus.sublime-dired-vscode)
 This Visual Studio Code extension lets you edit *(rename, move, create, delete, preview)* directories and files right from your text editor's buffer, enabling **very efficient, keyboard-driven file management**.
+
+You can also install it from the [Visual Studio Marketplace](https://marketplace.visualstudio.com/items/?itemName=Baegus.sublime-dired-vscode).
 
 ![Demo Animation](https://raw.githubusercontent.com/Baegus/sublime-dired-vscode/main/demo.gif)
 
