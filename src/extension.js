@@ -197,6 +197,7 @@ const tryReadingDirectory = (dir, preview=false) => {
 	let files;
 	try {
 		files = fs.readdirSync(dir);
+		files.sort((a, b) => a.localeCompare(b));
 	} catch (err) {
 		if (!preview) {
 			vscode.window.showErrorMessage(`Error reading directory: ${err.message}`);
